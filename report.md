@@ -30,24 +30,34 @@ Current limitations: The implementation uses deterministic regex search rather t
 SELF-CRITIQUE (Week 4)
 
 OBSERVE
+
  Reviewing our Week 4 deliverable, our problem framing and minimal RLM environment are solid, and the notebook runs end-to-end. However, our implementation is still mostly a deterministic scaffold, and we have not yet connected an actual LLM or tested multi-step recursive behavior. Several components remain unvalidated beyond simple synthetic tasks.
+
 ORIENT
+
  Strengths:
- • Clear problem definition and working minimal RLM pipeline.
- • Safe Python execution and reproducible batch results.
- • Strong roadmap with measurable success metrics.
+- Clear problem definition and working minimal RLM pipeline.
+- Safe Python execution and reproducible batch results.
+- Strong roadmap with measurable success metrics.
+
 Areas for Improvement:
- • No LLM-generated tool actions yet.
- • Tasks are too simple to demonstrate real recursive editing.
- • Training loop is only outlined, not implemented.
+- No LLM-generated tool actions yet.
+- Tasks are too simple to demonstrate real recursive editing.
+- Training loop is only outlined, not implemented.
+
 Critical Risks / Assumptions
+
  We assume our sandbox will behave correctly once the agent starts producing noisy or malformed Python, which is untested. We also assume synthetic tasks will transfer to more realistic ones when we introduce learning.
+
 DECIDE
+
  Concrete Next Actions:
- • Integrate a small local or API LLM to generate Python actions.
- • Add tasks that require multi-step reasoning.
- • Implement a basic imitation-learning loop using successful trajectories.
+- Integrate a small local or API LLM to generate Python actions.
+- Add tasks that require multi-step reasoning.
+- Implement a basic imitation-learning loop using successful trajectories.
+
 ACT
+
  Resource Needs
  We need example training scripts from rlm-minimal, access to a small model for testing, and guidance on reward shaping and safe sandbox extensions once the model begins producing real code.
 
