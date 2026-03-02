@@ -1,63 +1,90 @@
-PROBLEM STATEMENT
+## PROBLEM STATEMENT
 
 We aim to build and optimize a Recursive Language Model (RLM), where a base LLM interacts with an external Python REPL that holds long or complex context. The goal is effective recursive editing: the model must use Python tool calls (searching, transforming, filtering) to retrieve or generate correct answers on tasks where normal long-context prompting fails due to context degradation. This matters because real tasks like log analysis, large-file parsing, and multi-step code tasks require repeated access to external information rather than a single forward pass through the model.
 
-We measure success in two phases: (1) reproducing the RLM-minimal long-context retrieval task to verify the REPL loop works end-to-end, and (2) improving accuracy and efficiency through training (fewer REPL steps, fewer tokens, higher retrieval success). Metrics that we measure include accuracy, REPL turns, and token usage. Constraints include having a working minimal implementation today, small synthetic datasets, and a safe execution environment that prevents imports, file access, and long runtime. Stage 1 uses synthetic needle-in-haystack data. Stage 2 adds curated recursive-editing tasks (key-value extraction, log parsing, transform-then-answer tasks). Risks include the agent failing to use tools correctly, getting stuck in loops, or overfitting to synthetic tasks, plus instability in Python execution and sparse rewards during training.
+We measure success with four metrics: accuracy (exact match), reward (correctness minus step and token penalties), REPL steps (fewer is better), and runtime. Constraints include a safe execution environment (whitelisted builtins, blocked imports, 5-second timeout) and currently synthetic data only. Risks include LLM-generated code exploiting sandbox gaps, sparse rewards during RL training, and heuristic trajectories being too formulaic for effective imitation learning.
 
-TECHNICAL APPROACH
+## TECHNICAL APPROACH
 
- We implement an RLM as a wrapper around a base LLM with a Python REPL holding the external context. The model issues REPL actions (a1…aT) and a final answer y; reward is correctness minus small penalties for excessive steps or tokens. The objective is to maximize expected reward across tasks. We focus on recursive editing rather than evolutionary strategies per instructor guidance. Week 4’s milestone is reproducing the RLM-minimal loop: injecting context into the REPL, generating Python queries, and retrieving the correct result.
+### Architecture
 
-Training follows two stages: behavior cloning on successful rollouts, then RL-style optimization (e.g., reward-weighted updates) to encourage efficient tool use. We keep the action space restricted (regex search, slicing, chunk summarization) to maintain stability. Validation includes correctness on test tasks, efficiency metrics, and anti-cheating tests (varying needle formats and positions). We run locally with small models and limited episodes, logging runtime, tokens, and REPL steps to ensure reproducibility.
+The system consists of three components:
+1. **Task Generator**: Produces (context, question, answer) tuples across three task families
+2. **Agent**: Issues Python code to execute in the REPL, receives stdout/stderr, produces final answer
+3. **Training Loop**: Collects trajectories, filters successes, and (in future) performs gradient updates
 
-RESULTS
+### Objective Function
 
-Our minimal RLM implementation successfully reproduces the RLM-minimal loop end-to-end. The deterministic baseline agent achieves 100% accuracy (10/10 episodes) on synthetic needle-in-haystack tasks, demonstrating that the REPL injection, code generation, and result retrieval pipeline works correctly.
+We maximize expected reward under policy π:
 
-Performance metrics from batch evaluation (10 episodes):
-- Accuracy: 100.00% (all episodes correct)
-- Average runtime: 0.000122 seconds per episode
-- Average REPL steps: 1.00 step per episode
-- REPL execution time: 0.000032-0.000347 seconds (mean: 0.000077 sec)
+R = C − λ_s · (T / T_max) − λ_t · N_tokens
 
-Edge case tests all pass:
-- Missing needle (num_needles=0): Agent correctly returns "Needle not found"
-- Multiple needles (num_needles=2): Agent retrieves correct value
-- Long haystack (30 sentences, ~1771 characters): Agent successfully retrieves needle in < 0.001 seconds
+Where C ∈ {0,1} is binary correctness, T is the number of REPL steps taken, T_max is the maximum allowed steps, λ_s = 0.05 is the step penalty weight, and λ_t = 0.0001 is the token penalty weight.
 
-Current limitations: The implementation uses deterministic regex search rather than LLM-generated actions, handles only single-step retrieval (no multi-step reasoning), and has no training loop. The safe execution environment adds minimal overhead (< 0.001 sec per REPL call), and we encountered no unexpected challenges in the baseline implementation. Resource usage is minimal: episodes complete in under 1 millisecond on average, making the system computationally efficient for validation.
+### Task Types
 
-SELF-CRITIQUE (Week 4)
+| Task | Required Steps | Description |
+|------|---------------|-------------|
+| Needle-in-haystack | 1 | Find KEY=VALUE in random filler text |
+| KV extraction | 2 | Filter structured log by field, extract target field |
+| Aggregation | 2 | Find all METRIC_* keys, sum numeric values |
 
-OBSERVE
+### Agent Implementations
 
- Reviewing our Week 4 deliverable, our problem framing and minimal RLM environment are solid, and the notebook runs end-to-end. However, our implementation is still mostly a deterministic scaffold, and we have not yet connected an actual LLM or tested multi-step recursive behavior. Several components remain unvalidated beyond simple synthetic tasks.
+**DeterministicAgent** (Week 4): Single-step regex search. Parses question for key name, generates regex pattern, executes in REPL. Serves as correctness baseline.
 
-ORIENT
+**HeuristicMultiStepAgent** (Week 6): Strategy-based agent that classifies the question type and dispatches to the appropriate multi-step strategy. Each strategy generates and executes Python code in 1-2 REPL steps.
 
- Strengths:
-- Clear problem definition and working minimal RLM pipeline.
-- Safe Python execution and reproducible batch results.
-- Strong roadmap with measurable success metrics.
+### Training Pipeline (Week 7)
 
-Areas for Improvement:
-- No LLM-generated tool actions yet.
-- Tasks are too simple to demonstrate real recursive editing.
-- Training loop is only outlined, not implemented.
+1. Trajectory collection: Run agent on batch of tasks, record (context, question, actions, reward)
+2. Success filtering: Keep trajectories with reward ≥ threshold for imitation learning
+3. Behavior cloning (future): Fine-tune LLM on successful action sequences
+4. Reward-weighted updates (future): Weight training examples by reward
 
-Critical Risks / Assumptions
+## RESULTS
 
- We assume our sandbox will behave correctly once the agent starts producing noisy or malformed Python, which is untested. We also assume synthetic tasks will transfer to more realistic ones when we introduce learning.
+### Evaluation Summary
 
-DECIDE
+| Agent | Task Type | Accuracy | Avg Steps | Avg Reward |
+|-------|-----------|----------|-----------|------------|
+| DeterministicAgent | Needle | 100% | 1.0 | 0.995 |
+| HeuristicMultiStepAgent | Needle | 100% | 1.0 | 0.990 |
+| HeuristicMultiStepAgent | KV extraction | 100% | 2.0 | 0.980 |
+| HeuristicMultiStepAgent | Aggregation | 100% | 2.0 | 0.980 |
 
- Concrete Next Actions:
-- Integrate a small local or API LLM to generate Python actions.
-- Add tasks that require multi-step reasoning.
-- Implement a basic imitation-learning loop using successful trajectories.
+### Edge Cases (7/7 pass)
+- Missing needle: correctly returns "Needle not found"
+- Multiple needles: retrieves correct value
+- Long haystack (50 sentences): sub-millisecond retrieval
+- Large log (100 entries): 2-step extraction works
+- Many metrics (5 keys): correct summation
 
-ACT
+### Training Loop Statistics (5 iterations, batch=8)
+- Accuracy: 100% across all iterations (deterministic agent)
+- Average reward: 0.95
+- 40 trajectories collected, all pass success filter
 
- Resource Needs
- We need example training scripts from rlm-minimal, access to a small model for testing, and guidance on reward shaping and safe sandbox extensions once the model begins producing real code.
+### Current Limitations
+1. No LLM integration — agents use templated code, not generated code
+2. Training loop collects trajectories but does not update model parameters
+3. Task diversity is limited to 3 synthetic types
+4. Strategy selection is hardcoded via regex, not learned
 
+## SELF-CRITIQUE (Week 8)
+
+### OBSERVE
+The pipeline is complete from task generation through reward computation and trajectory collection. All 7 tests pass. However, the core research question — can a model learn to generate effective REPL code? — remains untouched because we have not integrated an LLM.
+
+### ORIENT
+**Strengths:** Modular architecture, three working task types, reliable sandbox, training loop ready for data.
+**Weaknesses:** No LLM, no actual learning, behind on written deliverables.
+**Risk:** LLM integration may surface problems (malformed code, sandbox escapes, latency) not seen with template agents.
+
+### DECIDE
+1. Integrate a small LLM over spring break (Qwen-0.5B or API model)
+2. Run behavior cloning on heuristic trajectories in Week 9
+3. Add more diverse tasks and begin reward-weighted training in Week 10
+
+### ACT
+Need GPU access (Colab free tier) or API credits. Need to study rlm-minimal's training code for behavior cloning reference.

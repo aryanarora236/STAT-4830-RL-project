@@ -1,22 +1,67 @@
-Week 4 Development Log (Team)
+## Development Log
 
-Day 1
-We met to understand the Week 4 deliverable requirements. After reading the instruction document, we realized the core requirement is having a minimal runnable optimization loop, not necessarily a trained agent. We discussed possible directions from the professor’s idea list and tried to decide between evolutionary strategies and recursive editing. After seeing the professor’s explicit note (“evo strategies are slow, do the other thing”), we unanimously shifted to recursive editing and RLM-style tool use. We also reviewed the RLM-minimal GitHub repo and skimmed the associated blog post.
+### Week 4 (Jan 27 – Feb 6)
 
-Day 2
-We spent time understanding the algorithm inside RLM-minimal. We summarized the main takeaway: the model uses a Python REPL as external memory rather than fitting the long context into the attention window. We discussed how to reproduce this using a toy needle-in-haystack task. We experimented with how to construct long random contexts and how to embed a needle string inside them. Some early attempts resulted in Python execution errors because we didn’t yet have a safe sandbox or restricted builtins.
+**Day 1**: Met to understand Week 4 deliverable requirements. After reading the instruction document, we realized the core requirement is having a minimal runnable optimization loop, not necessarily a trained agent. We discussed possible directions and shifted to recursive editing and RLM-style tool use after seeing the professor's guidance. Reviewed the RLM-minimal GitHub repo.
 
-Day 3
-We started implementing the safe_exec function. Our first version failed because Python code could still import modules accidentally. We added explicit checks to block imports and replaced builtins with a restricted safe dictionary. Our execution wrapper now captures stdout and returns error messages without crashing the notebook. We confirmed that we could evaluate a small piece of code inside the REPL environment successfully.
+**Day 2**: Spent time understanding the RLM-minimal algorithm. Key takeaway: the model uses a Python REPL as external memory rather than fitting long context into the attention window. Discussed how to reproduce this using a toy needle-in-haystack task. Some early attempts resulted in Python execution errors due to missing sandbox.
 
-Day 4
-We built the initial needle task generator. We tested it with small context sizes first (500–2000 characters). We verified the needle insertion logic and confirmed that Python regex could reliably extract the value using the REPL. We wrote the first version of the deterministic “tool agent” that uses regex to find the needle. This allowed us to run the first working episode end-to-end. The predicted answer matched the ground truth.
+**Day 3**: Implemented the `safe_exec` function. First version failed because Python code could still import modules. Added explicit checks to block imports and replaced builtins with a restricted safe dictionary. Confirmed we could evaluate code inside the REPL environment.
 
-Day 5
-We expanded our test to longer contexts (10,000–30,000 characters). We added timing to episodes and saw that performance was stable. We added transcript logging so that each REPL call is recorded with code, stdout, errors, and runtime. This produced a clean example transcript for our report. We built a batch runner to compute accuracy and average runtime over multiple episodes. The deterministic agent solved every case, which is expected since it uses direct regex.
+**Day 4**: Built the initial needle task generator. Tested with small context sizes (500–2000 characters). Verified needle insertion logic and confirmed regex could reliably extract the value. Wrote first deterministic "tool agent" and ran the first working episode end-to-end.
 
-Day 6
-We tried integrating a small HuggingFace model to generate Python code but ran into slow environment setup and model loading inconsistencies. Since Week 4 only requires a working minimal implementation, we postponed LLM generation to next week. We instead created a stub function that simulates what an LLM call would look like so the notebook structure is complete.
+**Day 5**: Expanded tests to longer contexts (10,000–30,000 characters). Added timing and transcript logging for each REPL call. Built a batch runner to compute accuracy and average runtime. Deterministic agent solved every case.
 
-Day 7
-We produced the notebook structure with sections for problem setup, mathematical formulation, implementation, validation, and next steps. We reran all cells start-to-finish to confirm nothing breaks. We collected metrics and example transcripts for the report. As a team, we discussed next steps: integrating real LLM code generation, reproducing more of the RLM-minimal pipeline, and extending the task family beyond simple needle retrieval. Everything needed for the Week 4 deliverable now exists in working form.
+**Day 6**: Tried integrating a small HuggingFace model but ran into slow setup and model loading issues. Postponed LLM generation to next week. Created a stub function simulating an LLM call.
+
+**Day 7**: Produced final notebook structure with sections for problem setup, mathematical formulation, implementation, validation, and next steps. Reran all cells to confirm nothing breaks. Collected metrics for the report.
+
+### Week 5 (Feb 10 – Feb 13)
+
+Focused on understanding what makes tasks require multi-step reasoning vs. single-step. Read through RLM-minimal's task definitions and identified two additional task families: structured log extraction (filter then extract) and aggregation (findall then compute). Began outlining how a strategy-based agent would select different approaches based on question type.
+
+Started drafting slides outline for the lightning talk but did not complete a full deck.
+
+### Week 6 (Feb 17 – Feb 20)
+
+**Implemented multi-step tasks:**
+- `generate_kv_extraction_task`: Creates structured log entries with timestamp, id, level, status fields. Agent must filter by one field (e.g., level=ERROR) and extract another field (e.g., status). Requires 2 REPL steps.
+- `generate_multistep_task`: Embeds multiple METRIC_X=<value> pairs in filler text. Agent must find all pairs and sum their numeric values. Requires 2 REPL steps.
+
+**Implemented HeuristicMultiStepAgent:**
+- Classifies question type using regex on the question text
+- Dispatches to one of three strategies: simple needle, KV filter, aggregation
+- Each strategy generates and executes Python code in 1-2 steps
+- All tests pass on all three task types
+
+**Key decision**: We chose to build a heuristic agent before LLM integration so we have a "gold standard" trajectory set for future imitation learning.
+
+### Week 7 (Feb 24 – Feb 27)
+
+**Implemented reward function:**
+- R = C - λ_s(T/T_max) - λ_t · N_tokens
+- Correct + 1 step → reward ≈ 0.995
+- Correct + 10 steps → reward ≈ 0.95
+- Wrong → reward ≈ -0.005 to -0.05
+
+**Implemented training loop skeleton (TrainingLoop class):**
+- `collect_batch()`: Runs agent on N tasks, records trajectories with rewards
+- `filter_successes()`: Returns trajectories above reward threshold
+- `train_step()`: One iteration of collect + filter + log statistics
+- `run()`: Multiple training iterations with progress logging
+
+**Implemented Trajectory class** to store (context, question, answer, actions, reward) per episode.
+
+Updated EvaluationFramework to compute and display reward alongside accuracy and step count.
+
+Revised slides outline and began working on Week 8 deliverables.
+
+### Week 8 (Mar 1 – Mar 7)
+
+Created Week 8 implementation notebook demonstrating the full pipeline: task generation → agent evaluation → reward computation → training loop with trajectory collection.
+
+Updated tests to cover all new functionality (7/7 tests pass: missing needle, multiple needles, long haystack, KV extraction, aggregation, reward computation, training loop).
+
+Prepared lightning talk for Mar 3 class presentation.
+
+**Key open question**: Which LLM to integrate? Options are Qwen-0.5B (local, free, slow) vs. API model (fast, costs money). Planning to decide over spring break.

@@ -4,3 +4,6 @@ docs/figures/*
 !docs/figures/*.tex
 
 local/
+__pycache__/
+*.pyc
+.claude/
