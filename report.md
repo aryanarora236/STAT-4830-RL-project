@@ -35,6 +35,8 @@ Where C ∈ {0,1} is binary correctness, T is the number of REPL steps taken, T_
 
 **HeuristicMultiStepAgent** (Week 6): Strategy-based agent that classifies the question type and dispatches to the appropriate multi-step strategy. Each strategy generates and executes Python code in 1-2 REPL steps.
 
+**LLMAgent** (Week 8): LLM-based agent using the HuggingFace Inference API (`Qwen/Qwen2.5-Coder-7B-Instruct` by default, configurable). Sends a system prompt instructing the LLM to generate Python code for a sandboxed REPL, along with a context preview and question. Extracts code from markdown blocks, executes via `safe_execute_code`, and uses a multi-step retry loop (up to 5 steps) — if execution fails, the error is sent back to the LLM for correction. Includes exponential backoff for rate limit handling.
+
 ### Training Pipeline (Week 7)
 
 1. Trajectory collection: Run agent on batch of tasks, record (context, question, actions, reward)
@@ -66,10 +68,11 @@ Where C ∈ {0,1} is binary correctness, T is the number of REPL steps taken, T_
 - 40 trajectories collected, all pass success filter
 
 ### Current Limitations
-1. No LLM integration — agents use templated code, not generated code
-2. Training loop collects trajectories but does not update model parameters
-3. Task diversity is limited to 3 synthetic types
-4. Strategy selection is hardcoded via regex, not learned
+1. LLM accuracy varies by task complexity — multi-step retry helps but is not guaranteed
+2. Rate limits on free-tier HuggingFace API constrain throughput
+3. Training loop collects trajectories but does not update model parameters
+4. Task diversity is limited to 3 synthetic types
+5. Strategy selection for heuristic agent is hardcoded via regex, not learned
 
 ## SELF-CRITIQUE (Week 8)
 

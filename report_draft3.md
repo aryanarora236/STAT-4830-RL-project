@@ -52,6 +52,13 @@ $$\max_\pi \; E\left[ R \mid \pi \right] \quad \text{where} \quad R = C - \lambd
 
 **HeuristicMultiStepAgent** (Week 6): Strategy-based agent that classifies the question type (needle / KV filter / aggregation) and dispatches to the appropriate multi-step strategy. Each strategy generates and executes Python code in 1-2 REPL steps.
 
+**LLMAgent** (Week 8): LLM-based agent using the HuggingFace Inference API (`Qwen/Qwen2.5-Coder-7B-Instruct` by default, configurable per instance). The agent:
+1. Sends a system prompt + context preview + question to the LLM
+2. Extracts Python code from the LLM's markdown-formatted response
+3. Executes code in the sandbox with `CONTEXT` holding the full text
+4. On error, sends stderr back to the LLM for correction (up to 5 retry steps)
+5. Uses exponential backoff (5s, 10s, 20s) on rate limit (429) errors
+
 ### Training Pipeline (Week 7)
 
 1. **Trajectory collection**: Run agent on batch of tasks, record (context, question, actions, reward)
@@ -84,10 +91,11 @@ $$\max_\pi \; E\left[ R \mid \pi \right] \quad \text{where} \quad R = C - \lambd
 - All trajectories pass success filter (reward ≥ 0.5)
 
 ### Current Limitations
-1. **No LLM integration** — all agents use templated code, not generated code
-2. **Training loop is a skeleton** — collects trajectories but does not update model parameters
-3. **Task diversity is limited** — 3 synthetic types, no real-world data
-4. **Strategy selection is hardcoded** — regex matching on question text, not learned
+1. **LLM accuracy varies** — depends on model quality, prompt engineering, and task complexity; multi-step retry helps but is not guaranteed
+2. **Rate limits** — free-tier HuggingFace API constrains throughput; exponential backoff mitigates but does not eliminate
+3. **Training loop is a skeleton** — collects trajectories but does not update model parameters
+4. **Task diversity is limited** — 3 synthetic types, no real-world data
+5. **Strategy selection is hardcoded** — heuristic agent uses regex matching on question text, not learned
 
 ## NEXT STEPS
 

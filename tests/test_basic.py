@@ -20,8 +20,10 @@ from src.utils import (
 from src.models import (
     DeterministicAgent,
     HeuristicMultiStepAgent,
+    LLMAgent,
     EvaluationFramework,
     TrainingLoop,
+    extract_code_from_response,
 )
 
 
@@ -121,6 +123,91 @@ def test_training_loop():
     return passed
 
 
+# ---- Week 8 tests: LLM Agent ----
+
+def test_code_extraction():
+    """extract_code_from_response should parse code from markdown blocks."""
+    print("=== Test: Code Extraction ===")
+
+    # Case 1: ```python block
+    resp1 = "Here is the code:\n```python\nprint('hello')\n```\nDone."
+    code1 = extract_code_from_response(resp1)
+    check1 = code1 == "print('hello')"
+
+    # Case 2: plain ``` block
+    resp2 = "```\nimport re\nm = re.search(r'KEY=(\\w+)', CONTEXT)\nprint(m.group(1))\n```"
+    code2 = extract_code_from_response(resp2)
+    check2 = code2 is not None and "re.search" in code2
+
+    # Case 3: no code block at all (just explanation)
+    resp3 = "The answer is 42. You should look at the data carefully."
+    code3 = extract_code_from_response(resp3)
+    check3 = code3 is None
+
+    # Case 4: raw code without fences
+    resp4 = "import re\nprint(re.findall(r'METRIC_\\w+=(\\d+)', CONTEXT))"
+    code4 = extract_code_from_response(resp4)
+    check4 = code4 is not None and "import re" in code4
+
+    passed = check1 and check2 and check3 and check4
+    print(f"  python block: {'OK' if check1 else 'FAIL'}")
+    print(f"  plain block:  {'OK' if check2 else 'FAIL'}")
+    print(f"  no code:      {'OK' if check3 else 'FAIL'}")
+    print(f"  raw code:     {'OK' if check4 else 'FAIL'}")
+    print(f"  {'PASS' if passed else 'FAIL'}")
+    return passed
+
+
+def _has_hf_token():
+    """Check if HF_TOKEN is set for LLM integration tests."""
+    return bool(os.environ.get("HF_TOKEN"))
+
+
+def test_llm_agent_needle():
+    """LLMAgent should find a needle in a haystack (requires HF_TOKEN)."""
+    print("=== Test: LLM Agent - Needle ===")
+    if not _has_hf_token():
+        print("  SKIPPED (HF_TOKEN not set)")
+        return True  # skip = pass
+
+    haystack, question, correct = generate_task(num_sentences=10, num_needles=1)
+    agent = LLMAgent(max_steps=5)
+    predicted, transcript = agent.run_episode(haystack, question, correct)
+    passed = predicted == correct
+    print(f"  Expected: {correct}  Got: {predicted}  Steps: {len(transcript)}  {'PASS' if passed else 'FAIL'}")
+    return passed
+
+
+def test_llm_agent_kv():
+    """LLMAgent should handle KV extraction tasks (requires HF_TOKEN)."""
+    print("=== Test: LLM Agent - KV Extraction ===")
+    if not _has_hf_token():
+        print("  SKIPPED (HF_TOKEN not set)")
+        return True
+
+    context, question, correct = generate_kv_extraction_task(num_entries=15)
+    agent = LLMAgent(max_steps=5)
+    predicted, transcript = agent.run_episode(context, question, correct)
+    passed = predicted == correct
+    print(f"  Expected: {correct}  Got: {predicted}  Steps: {len(transcript)}  {'PASS' if passed else 'FAIL'}")
+    return passed
+
+
+def test_llm_agent_aggregation():
+    """LLMAgent should handle aggregation tasks (requires HF_TOKEN)."""
+    print("=== Test: LLM Agent - Aggregation ===")
+    if not _has_hf_token():
+        print("  SKIPPED (HF_TOKEN not set)")
+        return True
+
+    context, question, correct = generate_multistep_task(num_sentences=10, num_keys=3)
+    agent = LLMAgent(max_steps=5)
+    predicted, transcript = agent.run_episode(context, question, correct)
+    passed = predicted == correct
+    print(f"  Expected: {correct}  Got: {predicted}  Steps: {len(transcript)}  {'PASS' if passed else 'FAIL'}")
+    return passed
+
+
 # ---- Runner ----
 
 def run_all_tests():
@@ -137,6 +224,10 @@ def run_all_tests():
         ("Aggregation", test_aggregation),
         ("Reward Computation", test_reward_computation),
         ("Training Loop", test_training_loop),
+        ("Code Extraction", test_code_extraction),
+        ("LLM Agent - Needle", test_llm_agent_needle),
+        ("LLM Agent - KV", test_llm_agent_kv),
+        ("LLM Agent - Aggregation", test_llm_agent_aggregation),
     ]
 
     results = []

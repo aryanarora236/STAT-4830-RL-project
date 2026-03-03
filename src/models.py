@@ -5,6 +5,7 @@ This module provides:
 - Agent: Abstract base class for all RLM agents
 - DeterministicAgent: Baseline agent using regex search (Week 4)
 - HeuristicMultiStepAgent: Multi-step agent using template strategies (Week 6)
+- LLMAgent: LLM-based agent using HuggingFace Inference API (Week 8)
 - EvaluationFramework: Orchestrates evaluation and collects metrics
 - TrainingLoop: Skeleton for imitation-learning / reward-weighted training (Week 7)
 """
@@ -14,6 +15,7 @@ from typing import List, Tuple, Dict, Any, Optional
 import time
 import re
 import random
+import os
 
 from src.utils import safe_execute_code, compute_reward
 
@@ -239,6 +241,263 @@ class HeuristicMultiStepAgent(Agent):
         stdout2, entry2 = self._exec_step(2, code_step2, haystack)
         self.transcript.append(entry2)
         return (stdout2 or "0"), self.transcript
+
+
+# ---------------------------------------------------------------------------
+# Week 8 – LLM-based agent via HuggingFace Inference API
+# ---------------------------------------------------------------------------
+
+# System prompt instructs the LLM how to generate REPL code
+_LLM_SYSTEM_PROMPT = (
+    "You are a Python code generator for a sandboxed REPL environment.\n"
+    "You will be given a question about a text stored in the variable CONTEXT.\n"
+    "Write Python code that processes CONTEXT and prints the answer.\n\n"
+    "Rules:\n"
+    "- The variable CONTEXT is already defined and contains the full text.\n"
+    "- You may only import the `re` module. No other imports are allowed.\n"
+    "- You MUST call print() with your final answer.\n"
+    "- Output ONLY a Python code block. No explanation outside the code block.\n"
+    "- Keep your code concise and correct.\n"
+)
+
+
+def extract_code_from_response(response_text: str) -> Optional[str]:
+    """Extract Python code from an LLM response containing markdown code blocks."""
+    # Try ```python ... ``` first
+    match = re.search(r"```python\s*\n(.*?)```", response_text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    # Fall back to ``` ... ```
+    match = re.search(r"```\s*\n(.*?)```", response_text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    # If the whole response looks like code (no markdown), use it directly
+    lines = response_text.strip().splitlines()
+    if lines and not any(line.startswith("#") and "```" in line for line in lines):
+        # Check if it looks like Python code
+        code_indicators = ("import ", "print(", "re.", "CONTEXT", "=", "for ", "if ")
+        if any(response_text.strip().startswith(ind) for ind in code_indicators):
+            return response_text.strip()
+    return None
+
+
+class LLMAgent(Agent):
+    """
+    LLM-based agent that calls a HuggingFace model to generate Python code
+    for REPL execution.
+
+    Uses huggingface_hub.InferenceClient with chat_completion. The client
+    is lazy-initialized on first use and requires the HF_TOKEN environment
+    variable to be set.
+    """
+
+    def __init__(
+        self,
+        name: str = "LLMAgent",
+        max_steps: int = 5,
+        model_id: str = "Qwen/Qwen2.5-Coder-7B-Instruct",
+        max_tokens: int = 512,
+        temperature: float = 0.2,
+    ):
+        super().__init__(name, max_steps)
+        self.model_id = model_id
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+        self._client = None
+
+    def _get_client(self):
+        """Lazy-initialize the HuggingFace InferenceClient."""
+        if self._client is None:
+            from huggingface_hub import InferenceClient
+            token = os.environ.get("HF_TOKEN")
+            if not token:
+                raise EnvironmentError(
+                    "HF_TOKEN environment variable is required for LLMAgent. "
+                    "Get a free token at https://huggingface.co/settings/tokens"
+                )
+            self._client = InferenceClient(model=self.model_id, token=token)
+        return self._client
+
+    def _call_llm(self, messages: List[Dict[str, str]]) -> str:
+        """Call the LLM with exponential backoff on rate limits."""
+        client = self._get_client()
+        backoff_times = [5, 10, 20]
+        for attempt in range(len(backoff_times) + 1):
+            try:
+                response = client.chat_completion(
+                    messages=messages,
+                    max_tokens=self.max_tokens,
+                    temperature=self.temperature,
+                )
+                return response.choices[0].message.content
+            except Exception as e:
+                error_str = str(e)
+                if "429" in error_str or "rate" in error_str.lower():
+                    if attempt < len(backoff_times):
+                        wait = backoff_times[attempt]
+                        time.sleep(wait)
+                        continue
+                raise
+        return ""
+
+    def run_episode(
+        self, haystack: str, question: str, correct_answer: str
+    ) -> Tuple[str, List[Dict[str, Any]]]:
+        self.transcript = []
+        predicted_answer = ""
+
+        # Build context preview for the prompt (first 500 chars)
+        context_preview = haystack[:500]
+        if len(haystack) > 500:
+            context_preview += f"\n... ({len(haystack)} total characters)"
+
+        # Initialize conversation with system prompt and user request
+        messages = [
+            {"role": "system", "content": _LLM_SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": (
+                    f"Context preview (the full text is available as the variable CONTEXT):\n"
+                    f"---\n{context_preview}\n---\n\n"
+                    f"Question: {question}\n\n"
+                    f"Write Python code to answer this question. "
+                    f"The full context is in the variable CONTEXT. "
+                    f"Print only the final answer."
+                ),
+            },
+        ]
+
+        for step in range(1, self.max_steps + 1):
+            # Step A: Call LLM
+            try:
+                llm_response = self._call_llm(messages)
+            except Exception as e:
+                self.transcript.append({
+                    "step": step,
+                    "action": "LLM Call Failed",
+                    "error": str(e),
+                })
+                predicted_answer = f"LLM Error: {e}"
+                break
+
+            # Step B: Extract code
+            code = extract_code_from_response(llm_response)
+            if code is None:
+                self.transcript.append({
+                    "step": step,
+                    "action": "Code Extraction Failed",
+                    "llm_response": llm_response[:500],
+                })
+                # Ask LLM to provide proper code block
+                messages.append({"role": "assistant", "content": llm_response})
+                messages.append({
+                    "role": "user",
+                    "content": (
+                        "I could not extract Python code from your response. "
+                        "Please provide your code inside a ```python code block. "
+                        "Remember to print() the final answer."
+                    ),
+                })
+                continue
+
+            # Step C: Execute code in sandbox
+            exec_result = safe_execute_code(code, custom_globals={"CONTEXT": haystack})
+
+            self.transcript.append({
+                "step": step,
+                "action": "REPL Execution",
+                "code": code,
+                "llm_response": llm_response[:500],
+                "exec_result": {
+                    "ok": exec_result.ok,
+                    "stdout": exec_result.stdout,
+                    "stderr": exec_result.stderr,
+                    "runtime_sec": exec_result.runtime_sec,
+                },
+            })
+
+            # Step D: Check result
+            if exec_result.ok and exec_result.stdout and exec_result.stdout.strip():
+                # Take last non-empty line as the answer
+                output_lines = exec_result.stdout.strip().splitlines()
+                predicted_answer = output_lines[-1].strip()
+                break
+            elif not exec_result.ok:
+                # Error: send it back to LLM for retry
+                messages.append({"role": "assistant", "content": llm_response})
+                messages.append({
+                    "role": "user",
+                    "content": (
+                        f"The code produced an error:\n{exec_result.stderr}\n\n"
+                        f"Please fix the code and try again. "
+                        f"Remember: only `re` can be imported, "
+                        f"CONTEXT holds the full text, and you must print() the answer."
+                    ),
+                })
+            else:
+                # No output: ask LLM to add print()
+                messages.append({"role": "assistant", "content": llm_response})
+                messages.append({
+                    "role": "user",
+                    "content": (
+                        "The code ran successfully but produced no output. "
+                        "Make sure to call print() with the final answer."
+                    ),
+                })
+
+        if not predicted_answer:
+            predicted_answer = "No answer produced"
+
+        return predicted_answer, self.transcript
+
+
+class LocalLLMAgent(LLMAgent):
+    """
+    Agent using a locally-loaded transformers model (e.g., fine-tuned with LoRA).
+
+    Inherits the multi-step retry logic from LLMAgent but replaces
+    API calls with local model.generate().
+    """
+
+    def __init__(
+        self,
+        model,
+        tokenizer,
+        name: str = "LocalLLMAgent",
+        max_steps: int = 5,
+        max_new_tokens: int = 512,
+        temperature: float = 0.2,
+    ):
+        # Call Agent.__init__ directly (skip LLMAgent's API setup)
+        Agent.__init__(self, name, max_steps)
+        self.model = model
+        self.tokenizer = tokenizer
+        self.max_new_tokens = max_new_tokens
+        self.temperature = temperature
+
+    def _call_llm(self, messages: List[Dict[str, str]]) -> str:
+        """Generate a response using the local model."""
+        import torch
+
+        input_text = self.tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+        inputs = self.tokenizer(
+            input_text, return_tensors="pt", truncation=True, max_length=2048
+        ).to(self.model.device)
+
+        with torch.no_grad():
+            outputs = self.model.generate(
+                **inputs,
+                max_new_tokens=self.max_new_tokens,
+                do_sample=self.temperature > 0,
+                temperature=max(self.temperature, 0.01),
+                top_p=0.9,
+                pad_token_id=self.tokenizer.pad_token_id,
+            )
+
+        generated = outputs[0, inputs["input_ids"].shape[1]:]
+        return self.tokenizer.decode(generated, skip_special_tokens=True)
 
 
 # ---------------------------------------------------------------------------
