@@ -65,3 +65,47 @@ Updated tests to cover all new functionality (7/7 tests pass: missing needle, mu
 Prepared lightning talk for Mar 3 class presentation.
 
 **Key open question**: Which LLM to integrate? Options are Qwen-0.5B (local, free, slow) vs. API model (fast, costs money). Planning to decide over spring break.
+
+Integrated LLMAgent using HuggingFace Inference API (Qwen2.5-Coder-7B-Instruct). The agent sends a system prompt + context preview to the LLM, extracts Python code from the response, executes it in the sandbox, and retries on error (up to 5 steps). Also built LocalLLMAgent for local training with LoRA.
+
+Ran the full pipeline on Colab GPU: behavior cloning on heuristic trajectories followed by REINFORCE. Did not save checkpoints or detailed logs — need to rerun with proper tracking.
+
+### Spring Break + Week 9 (Mar 7 – Mar 22)
+
+**Pivoted application domain from synthetic tasks to poker.**
+
+Motivation: The synthetic tasks (needle-in-haystack, KV extraction, aggregation) were too simple to demonstrate the value of long-context reasoning. The heuristic solved everything at 100%, and the "long context" was just filler text — the model didn't need to actually read it. Poker is a better fit because:
+- Hand history is genuinely long context that matters for optimal play
+- Computing opponent tendencies (VPIP, PFR, aggression) requires parsing previous hands
+- The retrieve → compute → decide flow maps naturally to the RLM framework
+
+**Built the poker environment** (`src/poker/environment.py`):
+- Card, Deck, HandEvaluator with 5-best-of-7 hand ranking
+- Monte Carlo equity estimation (configurable simulations vs. random opponent)
+- GameState with full game representation: hole cards, board, stacks, pot, positions, betting history
+- Structured HandRecord for previous hands (parseable by code, not just narrative)
+- Five opponent archetypes: Rock, TAG, LAG, Fish, Maniac — each with distinct stat profiles (VPIP, PFR, aggression, fold-to-cbet, 3-bet%)
+
+**Built the heuristic bot** (`src/poker/heuristic.py`):
+- 3-step retrieve → compute → decide flow:
+  1. Parse hand history → compute per-opponent stats (OpponentStats dataclass)
+  2. Evaluate hand strength, pot odds, draws
+  3. Apply opponent-specific adjustments to base strategy
+- Preflop: 5-tier hand ranking, position-aware open/call/fold
+- Postflop: hand category (monster/strong/medium/weak/nothing) + draw detection
+- Six adjustment types: exploit fish, respect rocks, trap maniacs, bluff high fold-to-cbet, fold to passive bets, call down aggressive players
+- Full ReasoningTrace output for trajectory collection
+
+**Built the task generator** (`src/poker/tasks.py`):
+- Generates (context, question, answer) tuples with ~3,000 char contexts
+- 15-20 hand histories per scenario, generated from consistent opponent profiles
+- `generate_poker_task_with_trace()` also returns the full reasoning trace for BC data
+- Poker-specific system prompt for the LLM agent
+
+**Testing**: Opponent adjustments fire ~9% of the time across 500 randomly generated scenarios. Confirmed adjustments for all six types (vs. aggressive, passive, tight, loose, high fold-to-cbet, maniac).
+
+### Week 10 (Mar 24 – Mar 27)
+
+Wrote Draft 4 report reflecting the poker pivot. Updated self-critique (OODA format). Discussed project direction with team — agreed on the poker application and the BC → RL training plan.
+
+Upcoming: need to run zero-shot LLM evaluation on poker tasks and begin behavior cloning on Colab.
