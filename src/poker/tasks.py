@@ -515,7 +515,8 @@ STEP 3 - DECIDE: Combine hand analysis with opponent profile.
 
 Available in the REPL:
 - CONTEXT: string containing the full game state + hand history
-- Standard Python (re, collections, etc.)
+- Python builtins (print, len, str, int, float, dict, list, etc.)
+- re module for regex parsing
 
 Your final print statement must be exactly one of:
 - "fold"

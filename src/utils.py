@@ -35,7 +35,10 @@ TIMEOUT_SECONDS = 5
 
 _EXEC_WHITELISTED_BUILTINS = (
     'print', 'len', 'str', 'int', 'float', 'range', 'dict', 'list', 'set', 'tuple',
-    'min', 'max', 'sum', 'abs', 'round', 'type', 'isinstance'
+    'min', 'max', 'sum', 'abs', 'round', 'type', 'isinstance',
+    'enumerate', 'sorted', 'reversed', 'any', 'all', 'zip', 'map', 'filter',
+    'bool', 'hasattr', 'getattr', 'chr', 'ord', 'hex', 'bin', 'oct',
+    'True', 'False', 'None',
 )
 
 _EXEC_DENYLISTED_IMPORTS = (
