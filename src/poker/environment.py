@@ -8,7 +8,7 @@ import random
 from dataclasses import dataclass, field
 from enum import IntEnum
 from itertools import combinations
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 
 
 # ── Cards ─────────────────────────────────────────────────────────────
@@ -184,6 +184,70 @@ class HandEvaluator:
         return (wins + ties * 0.5) / num_simulations
 
 
+# ── Opponent Profiles ─────────────────────────────────────────────────
+
+@dataclass
+class OpponentProfile:
+    """
+    Poker player archetype. Used to generate consistent hand histories
+    and for the heuristic to adjust against.
+
+    Stats:
+        vpip: Voluntarily Put $ In Pot (% of hands played, 0-1)
+        pfr: Pre-Flop Raise (% of hands raised preflop, 0-1)
+        aggression: postflop aggression factor (bets+raises / calls)
+        fold_to_cbet: % of time folds to continuation bet (0-1)
+        three_bet_pct: % of time 3-bets preflop (0-1)
+    """
+    name: str
+    vpip: float
+    pfr: float
+    aggression: float
+    fold_to_cbet: float
+    three_bet_pct: float
+
+    @property
+    def is_loose(self) -> bool:
+        return self.vpip > 0.30
+
+    @property
+    def is_tight(self) -> bool:
+        return self.vpip < 0.22
+
+    @property
+    def is_aggressive(self) -> bool:
+        return self.aggression > 1.5
+
+    @property
+    def is_passive(self) -> bool:
+        return self.aggression < 1.0
+
+
+# Standard archetypes
+OPPONENT_ARCHETYPES = {
+    "rock": OpponentProfile(
+        name="rock", vpip=0.14, pfr=0.11, aggression=1.2,
+        fold_to_cbet=0.70, three_bet_pct=0.03,
+    ),
+    "tag": OpponentProfile(
+        name="tag", vpip=0.22, pfr=0.18, aggression=2.0,
+        fold_to_cbet=0.55, three_bet_pct=0.07,
+    ),
+    "lag": OpponentProfile(
+        name="lag", vpip=0.35, pfr=0.28, aggression=2.8,
+        fold_to_cbet=0.40, three_bet_pct=0.12,
+    ),
+    "fish": OpponentProfile(
+        name="fish", vpip=0.52, pfr=0.10, aggression=0.6,
+        fold_to_cbet=0.35, three_bet_pct=0.02,
+    ),
+    "maniac": OpponentProfile(
+        name="maniac", vpip=0.60, pfr=0.42, aggression=3.5,
+        fold_to_cbet=0.25, three_bet_pct=0.18,
+    ),
+}
+
+
 # ── Game State ────────────────────────────────────────────────────────
 
 POSITIONS_6MAX = ["UTG", "MP", "CO", "BTN", "SB", "BB"]
@@ -194,6 +258,7 @@ class PlayerState:
     stack: float
     is_active: bool = True  # still in the hand
     total_bet: float = 0.0  # total chips put in this hand
+    profile: Optional[OpponentProfile] = None  # for opponents
 
 @dataclass
 class Action:
@@ -209,6 +274,32 @@ class Action:
         elif self.action in ("raise", "bet"):
             return f"{self.player} {'raises' if self.action == 'raise' else 'bets'} ${self.amount:.0f}"
         return f"{self.player} {self.action} ${self.amount:.0f}"
+
+
+@dataclass
+class HandRecord:
+    """A single previous hand for history context."""
+    hand_number: int
+    actions_by_street: Dict[str, List[Action]]  # street -> actions
+    board_by_street: Dict[str, List[Card]]       # street -> board cards
+    winner: str                                   # position of winner
+    pot_won: float
+    players_involved: List[str]                   # positions that played
+
+    def format(self) -> str:
+        """Format as parseable text."""
+        lines = [f"Hand #{self.hand_number}:"]
+        for street in ["preflop", "flop", "turn", "river"]:
+            if street not in self.actions_by_street:
+                continue
+            actions_str = ", ".join(str(a) for a in self.actions_by_street[street])
+            if street in self.board_by_street and self.board_by_street[street]:
+                board_str = " ".join(str(c) for c in self.board_by_street[street])
+                lines.append(f"  {street.capitalize()} [{board_str}]: {actions_str}")
+            else:
+                lines.append(f"  {street.capitalize()}: {actions_str}")
+        lines.append(f"  Result: {self.winner} wins ${self.pot_won:.0f}")
+        return "\n".join(lines)
 
 
 @dataclass
@@ -235,7 +326,7 @@ class GameState:
     actions: List[Action] = field(default_factory=list)
 
     # History (for long context)
-    hand_history: List[str] = field(default_factory=list)
+    hand_history: List[HandRecord] = field(default_factory=list)
 
     @property
     def to_call(self) -> float:
@@ -248,6 +339,10 @@ class GameState:
         if call_amt == 0:
             return 0.0
         return call_amt / (self.pot + call_amt)
+
+    @property
+    def active_opponents(self) -> List[PlayerState]:
+        return [p for p in self.players if p.position != self.hero_position and p.is_active]
 
     def format_context(self) -> str:
         """Format the game state as a text context string for the LLM."""
@@ -287,19 +382,18 @@ class GameState:
             lines.append(f"Pot Odds: {self.pot_odds:.1%}")
         lines.append("")
 
-        # Action history
+        # Action history for current hand
         if self.actions:
             lines.append("Betting History:")
-            current_street = "preflop"
             for a in self.actions:
                 lines.append(f"  {a}")
             lines.append("")
 
-        # Multi-hand history (long context)
+        # Multi-hand history (long context — this is what the model must parse)
         if self.hand_history:
-            lines.append("=== PREVIOUS HANDS ===")
-            for h in self.hand_history:
-                lines.append(h)
+            lines.append(f"=== PREVIOUS HANDS ({len(self.hand_history)} hands) ===")
+            for record in self.hand_history:
+                lines.append(record.format())
             lines.append("")
 
         return "\n".join(lines)
