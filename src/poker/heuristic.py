@@ -495,8 +495,8 @@ class HeuristicPokerBot:
 
         villain = opp_stats[villain_pos]
 
-        # Need enough data to make adjustments (at least 5 hands)
-        if villain.hands_seen < 5:
+        # Need enough data to make adjustments (at least 3 hands)
+        if villain.hands_seen < 3:
             return action, amount, note
 
         adjustments = trace.adjustments
@@ -504,7 +504,7 @@ class HeuristicPokerBot:
         # ── Preflop adjustments ──
         if state.street == "preflop":
             # Against a fish (loose-passive): widen value range, raise more for value
-            if villain.vpip > 0.40 and villain.aggression < 1.0:
+            if villain.vpip > 0.35 and villain.aggression < 1.2:
                 adjustments.append(f"{villain_pos} is loose-passive (VPIP={villain.vpip:.0%})")
                 if trace.preflop_tier == 3 and base_action == "fold":
                     action, amount = "call", state.to_call
@@ -516,7 +516,7 @@ class HeuristicPokerBot:
                     note = f"raising for value vs fish {villain_pos} (VPIP={villain.vpip:.0%})"
 
             # Against a maniac (loose-aggressive): tighten up, let them bluff
-            elif villain.vpip > 0.40 and villain.aggression > 2.5:
+            elif villain.vpip > 0.35 and villain.aggression > 2.0:
                 adjustments.append(f"{villain_pos} is a maniac (VPIP={villain.vpip:.0%}, Agg={villain.aggression:.1f})")
                 if trace.preflop_tier <= 2 and base_action == "call":
                     # Trap with premiums
@@ -524,7 +524,7 @@ class HeuristicPokerBot:
                     note = f"trapping maniac {villain_pos} (Agg={villain.aggression:.1f})"
 
             # Against a rock (tight): respect their raises
-            elif villain.vpip < 0.18:
+            elif villain.vpip < 0.22:
                 adjustments.append(f"{villain_pos} is tight (VPIP={villain.vpip:.0%})")
                 if state.to_call > 0 and trace.preflop_tier >= 3:
                     action, amount = "fold", 0
@@ -537,7 +537,7 @@ class HeuristicPokerBot:
         # ── Postflop adjustments ──
         else:
             # Against high fold-to-cbet: bluff more
-            if villain.fold_to_cbet > 0.60 and villain.fold_to_cbet_opps >= 3:
+            if villain.fold_to_cbet > 0.50 and villain.fold_to_cbet_opps >= 2:
                 adjustments.append(f"{villain_pos} folds to c-bets {villain.fold_to_cbet:.0%} of the time")
                 if base_action == "check" and trace.hand_category in ("weak", "nothing"):
                     action = "raise"
@@ -545,14 +545,14 @@ class HeuristicPokerBot:
                     note = f"bluffing vs {villain_pos} (fold-to-cbet={villain.fold_to_cbet:.0%})"
 
             # Against passive player who bets: they likely have it
-            if villain.aggression < 0.8 and state.to_call > 0:
+            if villain.aggression < 1.0 and state.to_call > 0:
                 adjustments.append(f"{villain_pos} is passive (Agg={villain.aggression:.1f}), bet likely means strength")
                 if trace.hand_category == "medium" and base_action == "call":
                     action, amount = "fold", 0
                     note = f"folding to passive player {villain_pos} bet (Agg={villain.aggression:.1f}, they usually have it)"
 
             # Against aggressive player: call down wider
-            if villain.aggression > 2.5 and state.to_call > 0:
+            if villain.aggression > 2.0 and state.to_call > 0:
                 adjustments.append(f"{villain_pos} is very aggressive (Agg={villain.aggression:.1f}), could be bluffing")
                 if trace.hand_category in ("medium", "weak") and base_action == "fold":
                     if state.pot_odds < 0.35:
@@ -561,7 +561,7 @@ class HeuristicPokerBot:
                         note = f"calling down vs aggressive {villain_pos} (Agg={villain.aggression:.1f})"
 
             # Against loose player postflop: value bet thinner
-            if villain.vpip > 0.40 and base_action == "check":
+            if villain.vpip > 0.35 and base_action == "check":
                 if trace.hand_category == "medium":
                     adjustments.append(f"{villain_pos} is loose (VPIP={villain.vpip:.0%}), value bet thinner")
                     action = "raise"

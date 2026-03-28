@@ -113,7 +113,8 @@ def _generate_hand_record(
     # Count active players
     active_count = sum(1 for v in active.values() if v)
     if active_count < 2:
-        winner = next(pos for pos, a in active.items() if a)
+        active_players = [pos for pos, a in active.items() if a]
+        winner = active_players[0] if active_players else positions[0]
         return HandRecord(
             hand_number=hand_num,
             actions_by_street=actions_by_street,
