@@ -495,8 +495,8 @@ class HeuristicPokerBot:
 
         villain = opp_stats[villain_pos]
 
-        # Need enough data to make adjustments (at least 3 hands)
-        if villain.hands_seen < 3:
+        # Need enough data to make adjustments (at least 2 hands)
+        if villain.hands_seen < 2:
             return action, amount, note
 
         adjustments = trace.adjustments
@@ -510,25 +510,43 @@ class HeuristicPokerBot:
                     action, amount = "call", state.to_call
                     note = f"calling vs fish {villain_pos} (VPIP={villain.vpip:.0%}, normally would fold)"
                 elif trace.preflop_tier <= 2 and base_action == "call":
-                    # Raise for value against a calling station
                     action = "raise"
                     amount = min(4 * state.big_blind, self._hero_stack(state))
                     note = f"raising for value vs fish {villain_pos} (VPIP={villain.vpip:.0%})"
+                elif trace.preflop_tier == 4 and base_action == "fold" and state.to_call <= 2 * state.big_blind:
+                    action, amount = "call", state.to_call
+                    note = f"widening range vs fish {villain_pos} (VPIP={villain.vpip:.0%}, cheap call)"
 
             # Against a maniac (loose-aggressive): tighten up, let them bluff
             elif villain.vpip > 0.35 and villain.aggression > 2.0:
                 adjustments.append(f"{villain_pos} is a maniac (VPIP={villain.vpip:.0%}, Agg={villain.aggression:.1f})")
                 if trace.preflop_tier <= 2 and base_action == "call":
-                    # Trap with premiums
                     action = "call"
                     note = f"trapping maniac {villain_pos} (Agg={villain.aggression:.1f})"
+                elif trace.preflop_tier <= 3 and base_action == "fold":
+                    action, amount = "call", state.to_call
+                    note = f"calling maniac {villain_pos} wider (Agg={villain.aggression:.1f}, likely overplaying)"
 
-            # Against a rock (tight): respect their raises
+            # Against a rock (tight): respect their raises, steal their blinds
             elif villain.vpip < 0.22:
                 adjustments.append(f"{villain_pos} is tight (VPIP={villain.vpip:.0%})")
                 if state.to_call > 0 and trace.preflop_tier >= 3:
                     action, amount = "fold", 0
                     note = f"folding to tight player {villain_pos} raise (VPIP={villain.vpip:.0%})"
+                elif state.to_call == 0 and trace.preflop_tier >= 4:
+                    # Steal attempt vs tight player
+                    late = state.hero_position in ("CO", "BTN")
+                    if late:
+                        action = "raise"
+                        amount = min(2.5 * state.big_blind, self._hero_stack(state))
+                        note = f"stealing vs tight {villain_pos} (VPIP={villain.vpip:.0%}, late position)"
+
+            # Against TAG (moderate stats): size up with value hands
+            elif 0.22 <= villain.vpip <= 0.35 and villain.aggression >= 1.5:
+                adjustments.append(f"{villain_pos} is TAG (VPIP={villain.vpip:.0%}, Agg={villain.aggression:.1f})")
+                if trace.preflop_tier == 1 and base_action == "raise":
+                    amount = min(amount * 1.3, self._hero_stack(state))
+                    note = f"sizing up vs TAG {villain_pos} (VPIP={villain.vpip:.0%})"
 
             # Exploit high fold-to-3bet
             if villain.three_bet_pct < 0.04 and villain.pfr > 0.15:
@@ -547,7 +565,7 @@ class HeuristicPokerBot:
             # Against passive player who bets: they likely have it
             if villain.aggression < 1.0 and state.to_call > 0:
                 adjustments.append(f"{villain_pos} is passive (Agg={villain.aggression:.1f}), bet likely means strength")
-                if trace.hand_category == "medium" and base_action == "call":
+                if trace.hand_category in ("medium", "weak") and base_action == "call":
                     action, amount = "fold", 0
                     note = f"folding to passive player {villain_pos} bet (Agg={villain.aggression:.1f}, they usually have it)"
 
@@ -555,18 +573,29 @@ class HeuristicPokerBot:
             if villain.aggression > 2.0 and state.to_call > 0:
                 adjustments.append(f"{villain_pos} is very aggressive (Agg={villain.aggression:.1f}), could be bluffing")
                 if trace.hand_category in ("medium", "weak") and base_action == "fold":
-                    if state.pot_odds < 0.35:
+                    if state.pot_odds < 0.40:
                         action = "call"
                         amount = state.to_call
                         note = f"calling down vs aggressive {villain_pos} (Agg={villain.aggression:.1f})"
 
             # Against loose player postflop: value bet thinner
             if villain.vpip > 0.35 and base_action == "check":
-                if trace.hand_category == "medium":
+                if trace.hand_category in ("medium", "weak") and trace.hand_strength >= 0.30:
                     adjustments.append(f"{villain_pos} is loose (VPIP={villain.vpip:.0%}), value bet thinner")
                     action = "raise"
                     amount = min(state.pot * 0.4, self._hero_stack(state))
                     note = f"thin value bet vs loose {villain_pos} (VPIP={villain.vpip:.0%})"
+
+            # Bet sizing adjustment: larger vs calling stations, smaller vs good players
+            if action == "raise" and note == "":
+                if villain.vpip > 0.40:
+                    amount = min(amount * 1.2, self._hero_stack(state))
+                    adjustments.append(f"sizing up vs loose {villain_pos}")
+                    note = f"larger sizing vs calling station {villain_pos} (VPIP={villain.vpip:.0%})"
+                elif villain.vpip < 0.20:
+                    amount = amount * 0.75
+                    adjustments.append(f"sizing down vs tight {villain_pos}")
+                    note = f"smaller sizing vs tight {villain_pos} (VPIP={villain.vpip:.0%})"
 
         if not adjustments:
             note = "no exploitable patterns found"

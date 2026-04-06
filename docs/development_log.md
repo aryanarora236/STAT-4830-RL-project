@@ -109,3 +109,49 @@ Motivation: The synthetic tasks (needle-in-haystack, KV extraction, aggregation)
 Wrote Draft 4 report reflecting the poker pivot. Updated self-critique (OODA format). Discussed project direction with team — agreed on the poker application and the BC → RL training plan.
 
 Upcoming: need to run zero-shot LLM evaluation on poker tasks and begin behavior cloning on Colab.
+
+### Week 11 (Mar 28 – Apr 5)
+
+**Zero-shot LLM baseline established** (done by teammate on Colab):
+- Ran Qwen2.5-Coder-7B-Instruct on 25 poker tasks via HuggingFace API
+- Result: 8% accuracy (2/25), avg reward 0.092
+- Model struggles to parse structured context and generate valid poker actions
+- Baseline saved to `docs/results/poker_zero_shot_baseline_25eps.txt`
+
+**Local model agent added** (`PokerLocalLLMAgent`):
+- Built by teammate — variant of PokerLLMAgent that uses a locally loaded transformers model
+- Supports evaluation and training loops without HuggingFace API dependency
+- Added to `src/poker/agents.py`
+
+**Training script added** (`scripts/poker_train.py`):
+- Full CLI for BC → RL → Eval pipeline with configurable arguments
+- Supports phase selection (bc/rl/full/eval), model selection, hyperparameters
+- Built by teammate for Colab training runs
+
+**Heuristic opponent modeling improved** (adjustment rate 9% → 15.4%):
+- Added steal attempts vs tight players from late position
+- Added wider calling ranges vs fish for cheap calls (tier 4 hands)
+- Added calling down vs maniacs wider (tier 3 hands)
+- Added TAG-specific adjustment: size up value bets with premiums
+- Added thin value bets with weak hands vs loose postflop (threshold lowered to strength ≥ 0.30)
+- Added postflop sizing adjustments: larger vs calling stations, smaller vs tight
+- Lowered history threshold from 3 to 2 observed hands
+
+**Comprehensive evaluation experiments run** (500 episodes each):
+- Heuristic evaluation: 100% accuracy, detailed per-action and per-street breakdown
+- Action distribution: fold 31%, call 32%, check 23%, raise 15%
+- Postflop hand categories: nothing 36%, weak 29%, medium 15%, strong 15%, monster 5%
+- Adjustment types: calling down aggressive (most common at 39), thin value bets (14), fold to passive (7)
+- REPL pipeline validation: 100% code execution success across 600 executions (0 errors)
+- Trajectory collection: 500 BC trajectories in 0.4s, avg 3,335 chars of code each
+
+**23 poker-specific tests added** (`tests/test_poker.py`):
+- Environment: deck, hand evaluator (pair, flush, straight, full house, 5-of-7), game state formatting
+- Heuristic: preflop tiers, hand keys, postflop strength, flush/straight draw detection, opponent stats parsing, decision-making
+- Tasks: generation, trace generation, history presence, all-streets coverage
+- Rewards: action parsing, exact match, type match, wrong action
+- Agents: PokerHeuristicAgent 3-step REPL pipeline validation
+- Evaluation: framework metrics and confusion matrix
+- Total: 34 tests, all passing
+
+**Deliverables**: Draft 5 report (this document), Week 11 self-critique, updated development log, experiment results saved to `experiments/results/week11_results.json`

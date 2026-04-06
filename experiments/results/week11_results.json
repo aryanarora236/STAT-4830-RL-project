@@ -1,0 +1,3790 @@
+{
+  "heuristic_evaluation": {
+    "correct": 500,
+    "type_match": 500,
+    "total": 500,
+    "by_action": {
+      "check": {
+        "correct": 117,
+        "total": 117
+      },
+      "fold": {
+        "correct": 139,
+        "total": 139
+      },
+      "call": {
+        "correct": 157,
+        "total": 157
+      },
+      "raise": {
+        "correct": 87,
+        "total": 87
+      }
+    },
+    "by_street": {
+      "preflop": {
+        "correct": 143,
+        "total": 143
+      },
+      "turn": {
+        "correct": 131,
+        "total": 131
+      },
+      "flop": {
+        "correct": 111,
+        "total": 111
+      },
+      "river": {
+        "correct": 115,
+        "total": 115
+      }
+    },
+    "total_reward": 500.0,
+    "total_steps": 1500,
+    "predictions": [
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $13",
+        "correct": "call $13",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $27",
+        "correct": "call $27",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $10",
+        "correct": "raise $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $21",
+        "correct": "raise $21",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $4",
+        "correct": "call $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $10",
+        "correct": "raise $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $9",
+        "correct": "call $9",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $8",
+        "correct": "raise $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $6",
+        "correct": "call $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $5",
+        "correct": "call $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $29",
+        "correct": "raise $29",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $32",
+        "correct": "raise $32",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $17",
+        "correct": "call $17",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $19",
+        "correct": "call $19",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $25",
+        "correct": "call $25",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $8",
+        "correct": "raise $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $2",
+        "correct": "raise $2",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $8",
+        "correct": "raise $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $36",
+        "correct": "call $36",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $9",
+        "correct": "call $9",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $6",
+        "correct": "raise $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $87",
+        "correct": "raise $87",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $26",
+        "correct": "call $26",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $17",
+        "correct": "call $17",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $8",
+        "correct": "raise $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $9",
+        "correct": "raise $9",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $3",
+        "correct": "call $3",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $8",
+        "correct": "raise $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $91",
+        "correct": "raise $91",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $15",
+        "correct": "call $15",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $8",
+        "correct": "raise $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $5",
+        "correct": "raise $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $6",
+        "correct": "raise $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call",
+        "correct": "call",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $3",
+        "correct": "call $3",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $18",
+        "correct": "call $18",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $4",
+        "correct": "raise $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $16",
+        "correct": "call $16",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $23",
+        "correct": "call $23",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $3",
+        "correct": "call $3",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $12",
+        "correct": "call $12",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $16",
+        "correct": "call $16",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $22",
+        "correct": "raise $22",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $14",
+        "correct": "call $14",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $19",
+        "correct": "call $19",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $17",
+        "correct": "call $17",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $9",
+        "correct": "call $9",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $5",
+        "correct": "call $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $5",
+        "correct": "call $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $24",
+        "correct": "call $24",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $9",
+        "correct": "raise $9",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $6",
+        "correct": "raise $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $27",
+        "correct": "call $27",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $5",
+        "correct": "raise $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $4",
+        "correct": "call $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $20",
+        "correct": "call $20",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $3",
+        "correct": "call $3",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $4",
+        "correct": "raise $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $14",
+        "correct": "raise $14",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $3",
+        "correct": "raise $3",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call",
+        "correct": "call",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $76",
+        "correct": "raise $76",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $19",
+        "correct": "raise $19",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $9",
+        "correct": "call $9",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $13",
+        "correct": "call $13",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $6",
+        "correct": "raise $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $5",
+        "correct": "raise $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $8",
+        "correct": "raise $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $8",
+        "correct": "raise $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $6",
+        "correct": "raise $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $5",
+        "correct": "call $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $13",
+        "correct": "call $13",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $13",
+        "correct": "call $13",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $6",
+        "correct": "call $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $24",
+        "correct": "call $24",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $12",
+        "correct": "call $12",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $15",
+        "correct": "call $15",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $16",
+        "correct": "call $16",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $5",
+        "correct": "raise $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $17",
+        "correct": "call $17",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $10",
+        "correct": "raise $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $16",
+        "correct": "call $16",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $14",
+        "correct": "raise $14",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $9",
+        "correct": "raise $9",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $12",
+        "correct": "raise $12",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $10",
+        "correct": "raise $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $9",
+        "correct": "call $9",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $21",
+        "correct": "call $21",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $6",
+        "correct": "raise $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $17",
+        "correct": "call $17",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $7",
+        "correct": "raise $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $16",
+        "correct": "call $16",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $14",
+        "correct": "call $14",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $5",
+        "correct": "call $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $10",
+        "correct": "raise $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $22",
+        "correct": "call $22",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $20",
+        "correct": "call $20",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $8",
+        "correct": "raise $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $6",
+        "correct": "call $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $11",
+        "correct": "raise $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $3",
+        "correct": "call $3",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $9",
+        "correct": "call $9",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $16",
+        "correct": "call $16",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $6",
+        "correct": "raise $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $9",
+        "correct": "raise $9",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $12",
+        "correct": "raise $12",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $5",
+        "correct": "call $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $12",
+        "correct": "call $12",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $14",
+        "correct": "call $14",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $8",
+        "correct": "raise $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $4",
+        "correct": "call $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $11",
+        "correct": "raise $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $2",
+        "correct": "raise $2",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $26",
+        "correct": "call $26",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $14",
+        "correct": "raise $14",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $5",
+        "correct": "raise $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $4",
+        "correct": "raise $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $4",
+        "correct": "raise $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $5",
+        "correct": "call $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $4",
+        "correct": "call $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $10",
+        "correct": "raise $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $4",
+        "correct": "call $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $44",
+        "correct": "raise $44",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $5",
+        "correct": "call $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $5",
+        "correct": "call $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $7",
+        "correct": "raise $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $12",
+        "correct": "call $12",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $3",
+        "correct": "call $3",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $10",
+        "correct": "raise $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $5",
+        "correct": "call $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $10",
+        "correct": "raise $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $4",
+        "correct": "call $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $27",
+        "correct": "call $27",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $15",
+        "correct": "call $15",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $3",
+        "correct": "raise $3",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $8",
+        "correct": "raise $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $16",
+        "correct": "call $16",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $8",
+        "correct": "raise $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $9",
+        "correct": "raise $9",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $6",
+        "correct": "raise $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $12",
+        "correct": "call $12",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $18",
+        "correct": "call $18",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $6",
+        "correct": "call $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $6",
+        "correct": "call $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $4",
+        "correct": "raise $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $9",
+        "correct": "call $9",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $14",
+        "correct": "call $14",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $4",
+        "correct": "raise $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $6",
+        "correct": "raise $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $5",
+        "correct": "raise $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $12",
+        "correct": "call $12",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $15",
+        "correct": "call $15",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $4",
+        "correct": "raise $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $6",
+        "correct": "call $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $4",
+        "correct": "call $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $17",
+        "correct": "call $17",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $10",
+        "correct": "raise $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $9",
+        "correct": "raise $9",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $9",
+        "correct": "raise $9",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $6",
+        "correct": "raise $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $12",
+        "correct": "raise $12",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $5",
+        "correct": "raise $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $8",
+        "correct": "raise $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $12",
+        "correct": "raise $12",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $15",
+        "correct": "call $15",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $12",
+        "correct": "raise $12",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $5",
+        "correct": "raise $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "raise $5",
+        "correct": "raise $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $5",
+        "correct": "call $5",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $4",
+        "correct": "call $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $8",
+        "correct": "raise $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $4",
+        "correct": "call $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $4",
+        "correct": "raise $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $7",
+        "correct": "raise $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $6",
+        "correct": "raise $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $12",
+        "correct": "call $12",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $7",
+        "correct": "call $7",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $10",
+        "correct": "call $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "raise $10",
+        "correct": "raise $10",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "call $27",
+        "correct": "call $27",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "call $11",
+        "correct": "call $11",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "river"
+      },
+      {
+        "predicted": "raise $4",
+        "correct": "raise $4",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "call $8",
+        "correct": "call $8",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "call $15",
+        "correct": "call $15",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "raise $6",
+        "correct": "raise $6",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "check",
+        "correct": "check",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "preflop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "flop"
+      },
+      {
+        "predicted": "fold",
+        "correct": "fold",
+        "exact_match": true,
+        "type_match": 1.0,
+        "street": "turn"
+      }
+    ]
+  },
+  "detailed_analysis": {
+    "num_episodes": 500,
+    "action_distribution": {
+      "fold": 155,
+      "check": 114,
+      "call": 158,
+      "raise": 73
+    },
+    "action_by_street": {
+      "flop": {
+        "fold": 44,
+        "check": 25,
+        "call": 35,
+        "raise": 10
+      },
+      "turn": {
+        "check": 17,
+        "fold": 32,
+        "call": 59,
+        "raise": 22
+      },
+      "river": {
+        "call": 61,
+        "fold": 30,
+        "raise": 31,
+        "check": 6
+      },
+      "preflop": {
+        "check": 66,
+        "raise": 10,
+        "fold": 49,
+        "call": 3
+      }
+    },
+    "tier_distribution": {
+      "5": 108,
+      "4": 10,
+      "3": 8,
+      "2": 2
+    },
+    "hand_category_distribution": {
+      "medium": 54,
+      "nothing": 135,
+      "strong": 55,
+      "weak": 109,
+      "monster": 19
+    },
+    "adjustment_rate": 0.154,
+    "adjustment_count": 77,
+    "adjustment_types": {
+      "Adjustment: folding to passive player MP bet (Agg=0.7, they usually have it)": 2,
+      "Adjustment: folding to passive player CO bet (Agg=0.0, they usually have it)": 2,
+      "Adjustment: stealing vs tight MP (VPIP=20%, late position)": 1,
+      "Adjustment: calling down vs aggressive MP (Agg=7.5)": 1,
+      "Adjustment: calling down vs aggressive UTG (Agg=26.0)": 2,
+      "Adjustment: calling down vs aggressive SB (Agg=3.6)": 1,
+      "Adjustment: calling down vs aggressive CO (Agg=3.8)": 1,
+      "Adjustment: calling down vs aggressive UTG (Agg=8.0)": 2,
+      "Adjustment: calling down vs aggressive UTG (Agg=7.0)": 2,
+      "Adjustment: calling down vs aggressive MP (Agg=7.0)": 2,
+      "Adjustment: folding to passive player MP bet (Agg=0.4, they usually have it)": 1,
+      "Adjustment: calling down vs aggressive UTG (Agg=5.0)": 1,
+      "Adjustment: folding to tight player MP raise (VPIP=20%)": 2,
+      "Adjustment: thin value bet vs loose MP (VPIP=67%)": 2,
+      "Adjustment: calling down vs aggressive CO (Agg=2.2)": 1,
+      "Adjustment: calling down vs aggressive UTG (Agg=4.0)": 1,
+      "Adjustment: thin value bet vs loose UTG (VPIP=60%)": 3,
+      "Adjustment: calling down vs aggressive MP (Agg=33.0)": 1,
+      "Adjustment: calling down vs aggressive MP (Agg=10.0)": 1,
+      "Adjustment: calling down vs aggressive SB (Agg=4.2)": 1,
+      "Adjustment: thin value bet vs loose UTG (VPIP=67%)": 1,
+      "Adjustment: calling down vs aggressive MP (Agg=11.0)": 3,
+      "Adjustment: calling down vs aggressive SB (Agg=6.0)": 1,
+      "Adjustment: folding to tight player BTN raise (VPIP=20%)": 1,
+      "Adjustment: stealing vs tight SB (VPIP=20%, late position)": 1,
+      "Adjustment: calling down vs aggressive UTG (Agg=22.0)": 1,
+      "Adjustment: calling down vs aggressive UTG (Agg=9.0)": 2,
+      "Adjustment: calling down vs aggressive BB (Agg=11.0)": 1,
+      "Adjustment: calling down vs aggressive MP (Agg=18.0)": 1,
+      "Adjustment: calling down vs aggressive CO (Agg=2.7)": 1,
+      "Adjustment: calling down vs aggressive MP (Agg=15.0)": 1,
+      "Adjustment: calling down vs aggressive CO (Agg=5.7)": 1,
+      "Adjustment: calling down vs aggressive BTN (Agg=5.2)": 1,
+      "Adjustment: calling down vs aggressive UTG (Agg=29.0)": 1,
+      "Adjustment: calling down vs aggressive MP (Agg=2.2)": 1,
+      "Adjustment: calling down vs aggressive CO (Agg=14.5)": 1,
+      "Adjustment: thin value bet vs loose UTG (VPIP=87%)": 1,
+      "Adjustment: calling down vs aggressive BB (Agg=2.9)": 1,
+      "Adjustment: calling down vs aggressive UTG (Agg=34.0)": 1,
+      "Adjustment: folding to passive player MP bet (Agg=0.1, they usually have it)": 1,
+      "Adjustment: calling down vs aggressive MP (Agg=17.0)": 1,
+      "Adjustment: calling down vs aggressive CO (Agg=16.0)": 1,
+      "Adjustment: folding to tight player CO raise (VPIP=7%)": 1,
+      "Adjustment: thin value bet vs loose UTG (VPIP=80%)": 1,
+      "Adjustment: calling down vs aggressive UTG (Agg=6.0)": 1,
+      "Adjustment: folding to passive player MP bet (Agg=0.8, they usually have it)": 1,
+      "Adjustment: calling down vs aggressive BTN (Agg=5.0)": 1,
+      "Adjustment: folding to passive player CO bet (Agg=0.2, they usually have it)": 1,
+      "Adjustment: calling down vs aggressive UTG (Agg=12.0)": 1,
+      "Adjustment: thin value bet vs loose UTG (VPIP=47%)": 2,
+      "Adjustment: calling down vs aggressive MP (Agg=3.2)": 1,
+      "Adjustment: calling down vs aggressive CO (Agg=4.0)": 1,
+      "Adjustment: stealing vs tight MP (VPIP=7%, late position)": 1,
+      "Adjustment: calling down vs aggressive MP (Agg=9.5)": 1,
+      "Adjustment: calling down vs aggressive MP (Agg=13.5)": 1,
+      "Adjustment: calling down vs aggressive MP (Agg=16.0)": 1,
+      "Adjustment: thin value bet vs loose UTG (VPIP=53%)": 1,
+      "Adjustment: calling down vs aggressive MP (Agg=3.6)": 1,
+      "Adjustment: calling down vs aggressive CO (Agg=25.0)": 1,
+      "Adjustment: calling down vs aggressive CO (Agg=5.0)": 1,
+      "Adjustment: calling down vs aggressive BTN (Agg=8.5)": 1,
+      "Adjustment: calling down vs aggressive CO (Agg=6.5)": 1,
+      "Adjustment: thin value bet vs loose UTG (VPIP=40%)": 1
+    },
+    "sample_adjustments": [
+      {
+        "street": "flop",
+        "action": "fold",
+        "adjustment": "Adjustment: folding to passive player MP bet (Agg=0.7, they usually have it)"
+      },
+      {
+        "street": "flop",
+        "action": "fold",
+        "adjustment": "Adjustment: folding to passive player CO bet (Agg=0.0, they usually have it)"
+      },
+      {
+        "street": "preflop",
+        "action": "raise $5",
+        "adjustment": "Adjustment: stealing vs tight MP (VPIP=20%, late position)"
+      },
+      {
+        "street": "river",
+        "action": "call $16",
+        "adjustment": "Adjustment: calling down vs aggressive MP (Agg=7.5)"
+      },
+      {
+        "street": "river",
+        "action": "call $3",
+        "adjustment": "Adjustment: calling down vs aggressive UTG (Agg=26.0)"
+      },
+      {
+        "street": "turn",
+        "action": "fold",
+        "adjustment": "Adjustment: folding to passive player MP bet (Agg=0.7, they usually have it)"
+      },
+      {
+        "street": "river",
+        "action": "call $27",
+        "adjustment": "Adjustment: calling down vs aggressive SB (Agg=3.6)"
+      },
+      {
+        "street": "turn",
+        "action": "call $17",
+        "adjustment": "Adjustment: calling down vs aggressive CO (Agg=3.8)"
+      },
+      {
+        "street": "turn",
+        "action": "call $14",
+        "adjustment": "Adjustment: calling down vs aggressive UTG (Agg=8.0)"
+      },
+      {
+        "street": "turn",
+        "action": "call $10",
+        "adjustment": "Adjustment: calling down vs aggressive UTG (Agg=7.0)"
+      },
+      {
+        "street": "flop",
+        "action": "call $15",
+        "adjustment": "Adjustment: calling down vs aggressive UTG (Agg=7.0)"
+      },
+      {
+        "street": "river",
+        "action": "call $10",
+        "adjustment": "Adjustment: calling down vs aggressive MP (Agg=7.0)"
+      },
+      {
+        "street": "river",
+        "action": "fold",
+        "adjustment": "Adjustment: folding to passive player MP bet (Agg=0.4, they usually have it)"
+      },
+      {
+        "street": "river",
+        "action": "call $10",
+        "adjustment": "Adjustment: calling down vs aggressive UTG (Agg=5.0)"
+      },
+      {
+        "street": "preflop",
+        "action": "fold",
+        "adjustment": "Adjustment: folding to tight player MP raise (VPIP=20%)"
+      },
+      {
+        "street": "flop",
+        "action": "raise $8",
+        "adjustment": "Adjustment: thin value bet vs loose MP (VPIP=67%)"
+      },
+      {
+        "street": "river",
+        "action": "call $9",
+        "adjustment": "Adjustment: calling down vs aggressive CO (Agg=2.2)"
+      },
+      {
+        "street": "turn",
+        "action": "call $6",
+        "adjustment": "Adjustment: calling down vs aggressive UTG (Agg=4.0)"
+      },
+      {
+        "street": "turn",
+        "action": "raise $3",
+        "adjustment": "Adjustment: thin value bet vs loose UTG (VPIP=60%)"
+      },
+      {
+        "street": "flop",
+        "action": "call $15",
+        "adjustment": "Adjustment: calling down vs aggressive MP (Agg=33.0)"
+      }
+    ]
+  },
+  "trajectory_collection": {
+    "num_trajectories": 500,
+    "correct": 500,
+    "has_code": 500,
+    "parsed_stats": 500,
+    "action_distribution": {
+      "fold": 160,
+      "call": 164,
+      "raise": 76,
+      "check": 100
+    },
+    "avg_code_length": 3335.02,
+    "context_length_stats": {
+      "min": 2812,
+      "max": 5602,
+      "avg": 4288.108
+    },
+    "collection_time_sec": 0.4186267852783203
+  },
+  "agent_repl_pipeline": {
+    "accuracy": 1.0,
+    "code_success_rate": 1.0,
+    "stats_parsed_rate": 1.0,
+    "avg_steps": 3.0,
+    "errors": 0
+  }
+}
