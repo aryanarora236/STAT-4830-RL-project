@@ -1,0 +1,40 @@
+
+==================================================
+Agent: PokerLLMAgent
+==================================================
+Exact match:  2/25 (8.0%)
+Type match:   2/25 (8.0%)
+Avg reward:   0.092
+Avg steps:    1.9
+
+Per-action accuracy:
+  call    : 1/15 (7%)
+  check   : 0/4 (0%)
+  fold    : 1/1 (100%)
+  raise   : 0/5 (0%)
+
+Per-street accuracy:
+  flop    : 0/9 (0%)
+  preflop : 1/3 (33%)
+  river   : 0/6 (0%)
+  turn    : 1/7 (14%)
+
+==================================================
+Agent: PokerHeuristicAgent
+==================================================
+Exact match:  25/25 (100.0%)
+Type match:   25/25 (100.0%)
+Avg reward:   1.000
+Avg steps:    3.0
+
+Per-action accuracy:
+  call    : 15/15 (100%)
+  check   : 4/4 (100%)
+  fold    : 1/1 (100%)
+  raise   : 5/5 (100%)
+
+Per-street accuracy:
+  flop    : 9/9 (100%)
+  preflop : 3/3 (100%)
+  river   : 6/6 (100%)
+  turn    : 7/7 (100%)

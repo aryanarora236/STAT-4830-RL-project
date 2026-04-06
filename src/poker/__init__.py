@@ -2,7 +2,7 @@ from src.poker.environment import Card, Deck, GameState, HandEvaluator, Opponent
 from src.poker.heuristic import HeuristicPokerBot, parse_opponent_stats
 from src.poker.tasks import generate_poker_task, generate_preflop_task, generate_postflop_task, generate_poker_task_with_trace
 from src.poker.rewards import compute_poker_reward, compute_poker_reward_simple, parse_action
-from src.poker.agents import PokerHeuristicAgent, PokerLLMAgent
+from src.poker.agents import PokerHeuristicAgent, PokerLLMAgent, PokerLocalLLMAgent
 from src.poker.evaluation import PokerEvaluationFramework
 from src.poker.training import (
     PokerBCTrainer, PokerReinforceTrainer,

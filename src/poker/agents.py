@@ -427,3 +427,52 @@ class PokerLLMAgent(LLMAgent):
             predicted_answer = "fold"
 
         return predicted_answer, self.transcript
+
+
+class PokerLocalLLMAgent(PokerLLMAgent):
+    """
+    Local-model variant of PokerLLMAgent for checkpoint evaluation/training loops.
+
+    Uses a locally loaded transformers model + tokenizer instead of HuggingFace API.
+    Keeps the same poker-specific prompting and retry behavior from PokerLLMAgent.
+    """
+
+    def __init__(
+        self,
+        model,
+        tokenizer,
+        name: str = "PokerLocalLLMAgent",
+        max_steps: int = 5,
+        max_new_tokens: int = 1024,
+        temperature: float = 0.2,
+    ):
+        # Initialize base Agent fields directly (avoid LLMAgent API client setup).
+        Agent.__init__(self, name, max_steps)
+        self.model = model
+        self.tokenizer = tokenizer
+        self.max_new_tokens = max_new_tokens
+        self.temperature = temperature
+
+    def _call_llm(self, messages: List[Dict[str, str]]) -> str:
+        """Generate a response using the local model."""
+        import torch
+
+        input_text = self.tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+        inputs = self.tokenizer(
+            input_text, return_tensors="pt", truncation=True, max_length=4096
+        ).to(self.model.device)
+
+        with torch.no_grad():
+            outputs = self.model.generate(
+                **inputs,
+                max_new_tokens=self.max_new_tokens,
+                do_sample=self.temperature > 0,
+                temperature=max(self.temperature, 0.01),
+                top_p=0.9,
+                pad_token_id=self.tokenizer.pad_token_id,
+            )
+
+        generated = outputs[0, inputs["input_ids"].shape[1]:]
+        return self.tokenizer.decode(generated, skip_special_tokens=True)
