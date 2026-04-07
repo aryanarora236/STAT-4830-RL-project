@@ -21,7 +21,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.training import load_model
+from src.training import load_model, LORA_PRESETS
 from src.poker.tasks import generate_poker_task, generate_preflop_task, generate_postflop_task
 from src.poker.training import (
     collect_poker_trajectories,
@@ -61,6 +61,8 @@ def run_bc(args):
         model_id_or_path=args.model,
         load_in_4bit=not args.full_precision,
         lora_r=args.lora_r,
+        lora_preset=args.lora_targets,
+        use_unsloth=args.unsloth,
     )
 
     # 3) Train BC
@@ -90,6 +92,7 @@ def run_rl(args, model=None, tokenizer=None):
         model, tokenizer = load_model(
             model_id_or_path=load_path,
             load_in_4bit=not args.full_precision,
+            use_unsloth=args.unsloth,
         )
 
     if args.rl_task_mode == "preflop":
@@ -110,9 +113,11 @@ def run_rl(args, model=None, tokenizer=None):
         baseline_ema=args.rl_baseline_ema,
         advantage_clip=args.rl_adv_clip,
         task_generator=rl_task_generator,
+        ema_gamma=args.ema_gamma,
     )
 
     history = trainer.train(num_iterations=args.rl_iterations)
+    trainer.plot_training()
     if history:
         first = history[0]
         last = history[-1]
@@ -186,6 +191,9 @@ def main():
     # Shared/model
     parser.add_argument("--full-precision", action="store_true", help="Disable 4-bit quantization")
     parser.add_argument("--lora-r", type=int, default=16)
+    parser.add_argument("--lora-targets", choices=list(LORA_PRESETS.keys()), default="attention",
+                        help="LoRA target preset: attention, mlp, mlp+head, attention+mlp, all, head")
+    parser.add_argument("--unsloth", action="store_true", help="Use unsloth for faster training (2-5x)")
     parser.add_argument("--max-length", type=int, default=4096)
     parser.add_argument("--max-new-tokens", type=int, default=1024)
 
@@ -205,6 +213,7 @@ def main():
     parser.add_argument("--rl-baseline-ema", type=float, default=0.95)
     parser.add_argument("--rl-adv-clip", type=float, default=2.0)
     parser.add_argument("--rl-task-mode", choices=["all", "preflop", "postflop"], default="all")
+    parser.add_argument("--ema-gamma", type=float, default=0.9, help="EMA decay for reward/accuracy tracking")
     parser.add_argument("--rl-output", default="./checkpoints/poker_rl")
 
     # Eval

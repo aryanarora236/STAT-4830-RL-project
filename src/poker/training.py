@@ -407,6 +407,7 @@ class PokerReinforceTrainer:
         max_grad_norm: float = 1.0,
         advantage_clip: float = 2.0,
         task_generator: Callable = generate_poker_task,
+        ema_gamma: float = 0.9,
     ):
         if not _torch_available:
             raise ImportError("PyTorch required for RL training")
@@ -421,11 +422,14 @@ class PokerReinforceTrainer:
         self.max_grad_norm = max_grad_norm
         self.advantage_clip = advantage_clip
         self.task_generator = task_generator
+        self.ema_gamma = ema_gamma
 
         trainable_params = [p for p in model.parameters() if p.requires_grad]
         self.optimizer = torch.optim.AdamW(trainable_params, lr=learning_rate)
 
         self.reward_baseline = 0.0
+        self.reward_ema = None  # EMA of reward: avg_{i+1} = (1-gamma)*r_i + gamma*avg_i
+        self.accuracy_ema = None
         self.history: List[Dict[str, float]] = []
 
     def _generate_code(
@@ -741,9 +745,20 @@ class PokerReinforceTrainer:
         self.optimizer.step()
 
         accuracy = sum(1 for t in trajectories if t.is_correct) / len(trajectories)
+
+        # Update EMA: avg_{i+1} = (1 - gamma) * r_i + gamma * avg_i
+        if self.reward_ema is None:
+            self.reward_ema = avg_reward
+            self.accuracy_ema = accuracy
+        else:
+            self.reward_ema = (1 - self.ema_gamma) * avg_reward + self.ema_gamma * self.reward_ema
+            self.accuracy_ema = (1 - self.ema_gamma) * accuracy + self.ema_gamma * self.accuracy_ema
+
         stats = {
             "accuracy": accuracy,
             "avg_reward": avg_reward,
+            "reward_ema": self.reward_ema,
+            "accuracy_ema": self.accuracy_ema,
             "loss": total_loss / len(trajectories),
             "baseline": self.reward_baseline,
             "batch_size": len(trajectories),
@@ -763,24 +778,18 @@ class PokerReinforceTrainer:
 
     def train(self, num_iterations: int = 20) -> List[Dict[str, float]]:
         """Run multiple REINFORCE iterations."""
-        print(f"\n--- Poker REINFORCE: {num_iterations} iters, batch={self.batch_size} ---")
+        print(f"\n--- Poker REINFORCE: {num_iterations} iters, batch={self.batch_size}, ema_gamma={self.ema_gamma} ---")
 
         for i in range(num_iterations):
             stats = self.train_step()
+            real_code = stats['code_extracted'] - stats.get('wrapped_action_code', 0)
             print(
                 f"  Iter {i+1}/{num_iterations}: "
-                f"acc={stats['accuracy']:.1%} | "
-                f"reward={stats['avg_reward']:.3f} | "
+                f"acc={stats['accuracy']:.1%} (ema={stats['accuracy_ema']:.1%}) | "
+                f"reward={stats['avg_reward']:.3f} (ema={stats['reward_ema']:.3f}) | "
                 f"loss={stats['loss']:.4f} | "
-                f"baseline={stats['baseline']:.3f} | "
-                f"code={stats['code_extracted']}/{stats['attempted']} | "
-                f"exec_ok={stats['exec_ok']} | "
-                f"nz_reward={stats['nonzero_reward']} | "
-                f"fb={stats['fallback_used']} | "
-                f"no_code={stats['no_code']} | "
-                f"exec_err={stats['exec_error']} | "
-                f"stdout_empty={stats['stdout_empty']} | "
-                f"wrapped={stats['wrapped_action_code']}"
+                f"real_code={real_code}/{stats['attempted']} | "
+                f"wrapped={stats.get('wrapped_action_code', 0)}"
             )
 
             if (i + 1) % 5 == 0:
@@ -796,3 +805,52 @@ class PokerReinforceTrainer:
         print(f"--- Training complete. Model saved to {self.output_dir} ---")
 
         return self.history
+
+    def plot_training(self, save_path: Optional[str] = None):
+        """Plot EMA reward and accuracy curves."""
+        if not self.history:
+            print("No training history to plot.")
+            return
+
+        try:
+            import matplotlib
+            matplotlib.use('Agg')
+            import matplotlib.pyplot as plt
+        except ImportError:
+            print("matplotlib not available — skipping plot")
+            return
+
+        iters = list(range(1, len(self.history) + 1))
+        raw_rewards = [h['avg_reward'] for h in self.history]
+        ema_rewards = [h['reward_ema'] for h in self.history]
+        raw_accs = [h['accuracy'] for h in self.history]
+        ema_accs = [h['accuracy_ema'] for h in self.history]
+
+        fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+        # Reward plot
+        axes[0].plot(iters, raw_rewards, 'o-', alpha=0.3, color='#3498db', markersize=3, label='Raw (per batch)')
+        axes[0].plot(iters, ema_rewards, '-', color='#2c3e50', linewidth=2, label=f'EMA (gamma={self.ema_gamma})')
+        axes[0].set_xlabel('Iteration')
+        axes[0].set_ylabel('Reward')
+        axes[0].set_title('Reward per Batch + EMA')
+        axes[0].legend()
+        axes[0].grid(alpha=0.3)
+
+        # Accuracy plot
+        axes[1].plot(iters, raw_accs, 'o-', alpha=0.3, color='#e74c3c', markersize=3, label='Raw (per batch)')
+        axes[1].plot(iters, ema_accs, '-', color='#2c3e50', linewidth=2, label=f'EMA (gamma={self.ema_gamma})')
+        axes[1].set_xlabel('Iteration')
+        axes[1].set_ylabel('Accuracy')
+        axes[1].set_title('Accuracy per Batch + EMA')
+        axes[1].set_ylim(-0.05, 1.05)
+        axes[1].legend()
+        axes[1].grid(alpha=0.3)
+
+        plt.tight_layout()
+        if save_path is None:
+            save_path = os.path.join(self.output_dir, 'training_curves.png')
+        os.makedirs(os.path.dirname(save_path) or '.', exist_ok=True)
+        fig.savefig(save_path, dpi=150, bbox_inches='tight')
+        plt.close(fig)
+        print(f"Training curves saved to {save_path}")

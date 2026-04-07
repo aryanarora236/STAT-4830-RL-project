@@ -37,13 +37,25 @@ from src.models import Agent, _LLM_SYSTEM_PROMPT, extract_code_from_response
 # Model loading
 # ---------------------------------------------------------------------------
 
+LORA_PRESETS = {
+    "attention": ["q_proj", "v_proj", "k_proj", "o_proj"],
+    "mlp": ["gate_proj", "up_proj", "down_proj"],
+    "mlp+head": ["gate_proj", "up_proj", "down_proj", "lm_head"],
+    "attention+mlp": ["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+    "all": ["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj", "lm_head"],
+    "head": ["lm_head"],
+}
+
+
 def load_model(
     model_id_or_path: str = "Qwen/Qwen2.5-Coder-1.5B-Instruct",
     load_in_4bit: bool = True,
     lora_r: int = 16,
     lora_alpha: int = 32,
     lora_target_modules: Optional[List[str]] = None,
+    lora_preset: Optional[str] = None,
     device_map: str = "auto",
+    use_unsloth: bool = False,
 ):
     """
     Load a causal LM for training.
@@ -52,12 +64,17 @@ def load_model(
     adapter_config.json), load saved LoRA adapters. Otherwise load the
     base model and attach fresh LoRA adapters.
 
+    Args:
+        lora_target_modules: Explicit list of module names.
+        lora_preset: Shorthand — one of "attention", "mlp", "mlp+head",
+                     "attention+mlp", "all", "head".  Overridden by
+                     lora_target_modules if both are given.
+        use_unsloth: If True, use unsloth FastLanguageModel for 2-5x
+                     faster training with automatic bf16 handling.
+
     Returns:
         (model, tokenizer)
     """
-    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-
     is_checkpoint = os.path.isdir(model_id_or_path) and os.path.exists(
         os.path.join(model_id_or_path, "adapter_config.json")
     )
@@ -65,7 +82,23 @@ def load_model(
     if is_checkpoint:
         return _load_checkpoint(model_id_or_path, load_in_4bit, device_map)
 
-    # --- Fresh model + new LoRA ---
+    # --- Resolve LoRA targets ---
+    if lora_target_modules is None:
+        preset_key = lora_preset or "attention"
+        lora_target_modules = LORA_PRESETS.get(preset_key, LORA_PRESETS["attention"])
+    print(f"LoRA targets: {lora_target_modules}")
+
+    # --- Unsloth fast path ---
+    if use_unsloth:
+        return _load_with_unsloth(
+            model_id_or_path, lora_r, lora_alpha, lora_target_modules,
+            load_in_4bit,
+        )
+
+    # --- Standard transformers + peft path ---
+    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+
     tokenizer = AutoTokenizer.from_pretrained(model_id_or_path, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
@@ -92,19 +125,67 @@ def load_model(
             trust_remote_code=True,
         )
 
-    if lora_target_modules is None:
-        lora_target_modules = ["q_proj", "v_proj", "k_proj", "o_proj"]
+    # modules_to_save ensures lm_head is fully trainable (not low-rank)
+    # when it appears in the target list, since LoRA on a tied embedding
+    # can be tricky.  For other modules plain LoRA is fine.
+    modules_to_save = []
+    lora_modules = list(lora_target_modules)
+    if "lm_head" in lora_modules:
+        lora_modules.remove("lm_head")
+        modules_to_save.append("lm_head")
 
     lora_config = LoraConfig(
         r=lora_r,
         lora_alpha=lora_alpha,
-        target_modules=lora_target_modules,
+        target_modules=lora_modules if lora_modules else ["q_proj", "v_proj"],
+        modules_to_save=modules_to_save if modules_to_save else None,
         lora_dropout=0.05,
         bias="none",
         task_type="CAUSAL_LM",
     )
     model = get_peft_model(model, lora_config)
     model.print_trainable_parameters()
+
+    return model, tokenizer
+
+
+def _load_with_unsloth(
+    model_id: str,
+    lora_r: int,
+    lora_alpha: int,
+    target_modules: List[str],
+    load_in_4bit: bool,
+):
+    """Load model using unsloth for faster LoRA training."""
+    try:
+        from unsloth import FastLanguageModel
+    except ImportError:
+        raise ImportError(
+            "unsloth not installed. Install with:\n"
+            "  pip install unsloth\n"
+            "Then restart the runtime."
+        )
+
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_name=model_id,
+        max_seq_length=4096,
+        load_in_4bit=load_in_4bit,
+        dtype=None,  # auto-detect
+    )
+
+    model = FastLanguageModel.get_peft_model(
+        model,
+        r=lora_r,
+        lora_alpha=lora_alpha,
+        target_modules=target_modules,
+        lora_dropout=0.05,
+        bias="none",
+        use_gradient_checkpointing="unsloth",
+    )
+    model.print_trainable_parameters()
+
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
 
     return model, tokenizer
 
