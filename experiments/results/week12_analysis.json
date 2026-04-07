@@ -1,0 +1,184 @@
+{
+  "heuristic_eval": {
+    "total": 1000,
+    "by_action": {
+      "check": 237,
+      "raise": 163,
+      "fold": 259,
+      "call": 341
+    },
+    "by_street": {
+      "preflop": 261,
+      "river": 249,
+      "turn": 249,
+      "flop": 241
+    },
+    "by_street_action": {
+      "preflop": {
+        "check": 164,
+        "raise": 20,
+        "fold": 60,
+        "call": 17
+      },
+      "river": {
+        "raise": 66,
+        "call": 122,
+        "fold": 42,
+        "check": 19
+      },
+      "turn": {
+        "raise": 42,
+        "call": 128,
+        "check": 20,
+        "fold": 59
+      },
+      "flop": {
+        "raise": 35,
+        "call": 74,
+        "fold": 98,
+        "check": 34
+      }
+    },
+    "opponent_adjustments": 128,
+    "adjustment_types": {
+      "steal": 7,
+      "thin value": 27,
+      "calling down": 92,
+      "trap": 2
+    },
+    "hand_strengths": {
+      "monster": 44,
+      "weak": 229,
+      "strong": 139,
+      "nothing": 230,
+      "medium": 97
+    },
+    "preflop_tiers": {
+      "tier_5": 215,
+      "tier_3": 14,
+      "tier_1": 2,
+      "tier_2": 10,
+      "tier_4": 20
+    },
+    "pot_sizes": {
+      "mean": 22.931,
+      "min": 3,
+      "max": 91,
+      "count": 1000
+    },
+    "to_call_amounts": {
+      "mean": 11.020900321543408,
+      "min": 2,
+      "max": 38,
+      "count": 622
+    },
+    "context_lengths": {
+      "mean": 4329.673,
+      "min": 2933,
+      "max": 5767,
+      "count": 1000
+    }
+  },
+  "training_data": {
+    "total": 500,
+    "action_distribution": {
+      "check": 117,
+      "fold": 139,
+      "call": 157,
+      "raise": 87
+    },
+    "code_lengths": {
+      "mean": 3335.086,
+      "min": 3333,
+      "max": 3338,
+      "count": 500
+    },
+    "context_lengths": {
+      "mean": 4301.99,
+      "min": 3036,
+      "max": 5455,
+      "count": 500
+    },
+    "correct_rate": 500,
+    "parsed_stats_rate": 500,
+    "unique_actions": [
+      "call $27",
+      "call $15",
+      "raise $32",
+      "call $19",
+      "call $7",
+      "raise $2",
+      "raise $9",
+      "raise $12",
+      "call $9",
+      "call $10",
+      "call $14",
+      "call $8",
+      "raise $91",
+      "raise $11",
+      "call $4",
+      "call $26",
+      "call $3",
+      "raise $8",
+      "raise $3",
+      "call $11"
+    ]
+  },
+  "ablation": {
+    "total": 500,
+    "with_adjustment": 69,
+    "without_adjustment": 431,
+    "adjustment_rate": 0.138,
+    "examples": [
+      {
+        "answer": "raise $5",
+        "trace_excerpt": "=== STEP 1: RETRIEVE (opponent stats from history) ===\n  SB: 15 hands | VPIP 20% | PFR 0% | Agg 0.4 | Fold-to-CBet 0%\n\n=== STEP 2: COMPUTE (hand analysis) ===\n  Hand: Q5s (Tier 5)\n  Opponent adjustments:\n    - SB is tight (VPIP=20%)\n\n=== STEP 3: DECIDE ===\n  Base decision: check\n  Adjustment: steali"
+      },
+      {
+        "answer": "raise $11",
+        "trace_excerpt": "=== STEP 1: RETRIEVE (opponent stats from history) ===\n  UTG: 15 hands | VPIP 47% | PFR 0% | Agg 1.0 | Fold-to-CBet 0%\n  CO: 15 hands | VPIP 20% | PFR 0% | Agg 0.2 | Fold-to-CBet 0%\n  SB: 15 hands | VPIP 53% | PFR 20% | Agg 1.2 | Fold-to-CBet 50%\n  BB: 15 hands | VPIP 40% | PFR 20% | Agg 1.2 | Fold-"
+      },
+      {
+        "answer": "call $9",
+        "trace_excerpt": "=== STEP 1: RETRIEVE (opponent stats from history) ===\n  MP: 15 hands | VPIP 47% | PFR 13% | Agg 4.0 | Fold-to-CBet 0%\n  CO: 15 hands | VPIP 73% | PFR 0% | Agg 21.0 | Fold-to-CBet 33%\n  SB: 15 hands | VPIP 80% | PFR 0% | Agg 2.6 | Fold-to-CBet 0%\n\n=== STEP 2: COMPUTE (hand analysis) ===\n  Made hand:"
+      },
+      {
+        "answer": "raise $10",
+        "trace_excerpt": "=== STEP 1: RETRIEVE (opponent stats from history) ===\n  UTG: 15 hands | VPIP 87% | PFR 53% | Agg 25.0 | Fold-to-CBet 0%\n  CO: 15 hands | VPIP 27% | PFR 0% | Agg 0.3 | Fold-to-CBet 50%\n  BTN: 15 hands | VPIP 40% | PFR 0% | Agg 0.4 | Fold-to-CBet 20%\n  BB: 15 hands | VPIP 53% | PFR 7% | Agg 1.7 | Fol"
+      },
+      {
+        "answer": "raise $8",
+        "trace_excerpt": "=== STEP 1: RETRIEVE (opponent stats from history) ===\n  MP: 15 hands | VPIP 60% | PFR 7% | Agg 0.5 | Fold-to-CBet 0%\n  CO: 15 hands | VPIP 27% | PFR 7% | Agg 2.0 | Fold-to-CBet 0%\n  BTN: 15 hands | VPIP 40% | PFR 7% | Agg 7.0 | Fold-to-CBet 100%\n  SB: 15 hands | VPIP 40% | PFR 7% | Agg 2.8 | Fold-t"
+      }
+    ]
+  },
+  "difficulty": {
+    "total": 500,
+    "distribution": {
+      "trivial": 140,
+      "easy": 52,
+      "medium": 239,
+      "hard": 69
+    },
+    "action_breakdown": {
+      "trivial": {
+        "check": 115,
+        "fold": 25
+      },
+      "easy": {
+        "raise": 50,
+        "call": 2
+      },
+      "medium": {
+        "raise": 15,
+        "call": 125,
+        "fold": 99
+      },
+      "hard": {
+        "raise": 21,
+        "call": 42,
+        "fold": 6
+      }
+    }
+  }
+}

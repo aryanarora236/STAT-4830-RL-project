@@ -186,7 +186,7 @@ def main():
     # Shared/model
     parser.add_argument("--full-precision", action="store_true", help="Disable 4-bit quantization")
     parser.add_argument("--lora-r", type=int, default=16)
-    parser.add_argument("--max-length", type=int, default=2048)
+    parser.add_argument("--max-length", type=int, default=4096)
     parser.add_argument("--max-new-tokens", type=int, default=1024)
 
     # BC

@@ -304,7 +304,7 @@ class PokerBCTrainer:
         num_epochs: int = 3,
         batch_size: int = 4,
         learning_rate: float = 2e-4,
-        max_length: int = 2048,
+        max_length: int = 4096,
     ):
         self.model = model
         self.tokenizer = tokenizer
@@ -333,6 +333,16 @@ class PokerBCTrainer:
 
         dataset = HFDataset.from_dict({"text": texts})
 
+        # Detect GPU capability: use bf16 on Ampere+, fp16 on older (T4, etc.)
+        use_bf16 = False
+        use_fp16 = False
+        if _torch_available and torch.cuda.is_available():
+            cap = torch.cuda.get_device_capability()
+            if cap[0] >= 8:  # Ampere (A100, A10G, etc.)
+                use_bf16 = True
+            else:  # Turing (T4), Volta (V100), etc.
+                use_fp16 = True
+
         training_args = SFTConfig(
             output_dir=self.output_dir,
             num_train_epochs=self.num_epochs,
@@ -342,11 +352,14 @@ class PokerBCTrainer:
             logging_steps=10,
             save_steps=100,
             save_total_limit=2,
-            bf16=True,
+            bf16=use_bf16,
+            fp16=use_fp16,
             gradient_accumulation_steps=2,
             warmup_ratio=0.1,
             lr_scheduler_type="cosine",
             dataset_text_field="text",
+            gradient_checkpointing=True,
+            optim="adamw_torch",
         )
 
         trainer = SFTTrainer(
