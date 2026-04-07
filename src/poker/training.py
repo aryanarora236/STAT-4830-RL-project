@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Any, Optional, Tuple, Callable
 import os
 import random
+import re
 
 _torch_available = False
 try:
@@ -429,8 +430,8 @@ class PokerReinforceTrainer:
                 **inputs,
                 max_new_tokens=self.max_new_tokens,
                 do_sample=True,
-                temperature=0.7,
-                top_p=0.9,
+                temperature=0.2,
+                top_p=0.95,
                 pad_token_id=self.tokenizer.pad_token_id,
             )
 
@@ -438,6 +439,62 @@ class PokerReinforceTrainer:
             generated_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
 
         return generated_text, generated_ids
+
+    @staticmethod
+    def _action_to_text(action_type: str, amount: float) -> str:
+        """Convert parsed action tuple into canonical output text."""
+        if action_type in ("fold", "check"):
+            return action_type
+        if action_type in ("call", "raise"):
+            if amount > 0:
+                return f"{action_type} ${int(round(amount))}"
+            return action_type
+        return "fold"
+
+    @staticmethod
+    def _extract_code_fallback(response_text: str) -> Optional[str]:
+        """
+        Fallback code extraction when markdown fences are missing.
+
+        Heuristic: if response contains python-like lines, slice from first
+        likely code line through the end.
+        """
+        from src.models import extract_code_from_response
+
+        code = extract_code_from_response(response_text)
+        if code is not None:
+            return code
+
+        lines = response_text.splitlines()
+        if not lines:
+            return None
+
+        start_idx = None
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if (
+                stripped.startswith("import ")
+                or stripped.startswith("print(")
+                or "CONTEXT" in stripped
+                or stripped.startswith("for ")
+                or stripped.startswith("if ")
+                or stripped.startswith("lines =")
+            ):
+                start_idx = i
+                break
+
+        if start_idx is None:
+            return None
+
+        candidate = "\n".join(lines[start_idx:]).strip()
+        if "print(" in candidate:
+            return candidate
+        return None
+
+    @staticmethod
+    def _looks_like_action_text(text: str) -> bool:
+        """Quick check for action-like text in model output."""
+        return bool(re.search(r"\b(fold|check|call|raise)\b", text.lower()))
 
     def _compute_log_probs(
         self, messages: List[Dict[str, str]], generated_ids: "torch.Tensor"
@@ -469,35 +526,146 @@ class PokerReinforceTrainer:
 
     def train_step(self) -> Dict[str, float]:
         """One REINFORCE iteration."""
-        from src.models import extract_code_from_response
-
         self.model.train()
         trajectories = []
         rollout_data = []
+        attempted = 0
+        extracted = 0
+        exec_ok_count = 0
+        nonzero_reward_count = 0
+        no_code_count = 0
+        exec_error_count = 0
+        stdout_empty_count = 0
+        fallback_used_count = 0
+        parse_failed_count = 0
+        wrapped_action_code_count = 0
 
         for _ in range(self.batch_size):
+            attempted += 1
             context, question, correct_answer = generate_poker_task()
-            messages = format_poker_prompt(question, context)
-
-            response_text, generated_ids = self._generate_code(messages)
-            code = extract_code_from_response(response_text)
-
-            if code is None:
-                continue
-
-            exec_result = safe_execute_code(
-                code, custom_globals={"CONTEXT": context}
+            base_messages = format_poker_prompt(question, context)
+            base_messages[-1]["content"] += (
+                "\n\nImportant output format:\n"
+                "- Return ONLY executable Python code.\n"
+                "- No markdown fences.\n"
+                "- Last printed line must be exactly one poker action "
+                "(fold/check/call $X/raise $X).\n"
             )
 
-            if exec_result.ok and exec_result.stdout and exec_result.stdout.strip():
-                predicted = exec_result.stdout.strip().splitlines()[-1].strip()
-            else:
-                predicted = "fold"
+            messages = base_messages
+            response_text = ""
+            generated_ids = None
+            code = None
+            predicted = ""
+            parsed_stats = False
+            used_fallback = False
+            had_code = False
+            had_exec_ok = False
 
-            # Check if code parsed opponent stats
-            parsed_stats = "vpip" in exec_result.stdout.lower() if exec_result.stdout else False
+            # Retry generation to recover executable code before fallback.
+            for attempt_idx in range(3):
+                response_text, generated_ids = self._generate_code(messages)
+                code = self._extract_code_fallback(response_text)
+
+                if code is None:
+                    # If final retry still has no code, convert response into
+                    # canonical action and execute via minimal Python.
+                    if attempt_idx == 2:
+                        wrapped_action_code_count += 1
+                        raw_type, raw_amt = parse_action(response_text)
+                        action_text = self._action_to_text(raw_type, raw_amt)
+                        code = f'print("{action_text}")'
+                    else:
+                        no_code_count += 1
+                        if attempt_idx < 2:
+                            messages = messages + [{
+                                "role": "assistant",
+                                "content": response_text,
+                            }, {
+                                "role": "user",
+                                "content": (
+                                    "Your previous response was not executable Python code.\n"
+                                    "Return only runnable Python now, ending with exactly one "
+                                    "print action line (fold/check/call $X/raise $X)."
+                                ),
+                            }]
+                        continue
+
+                if code is None:
+                    if attempt_idx < 2:
+                        messages = messages + [{
+                            "role": "assistant",
+                            "content": response_text,
+                        }, {
+                            "role": "user",
+                            "content": (
+                                "Your previous response was not executable Python code.\n"
+                                "Return only runnable Python now, ending with exactly one "
+                                "print action line (fold/check/call $X/raise $X)."
+                            ),
+                        }]
+                    continue
+
+                had_code = True
+                extracted += 1
+                exec_result = safe_execute_code(code, custom_globals={"CONTEXT": context})
+
+                if not exec_result.ok:
+                    exec_error_count += 1
+                    if attempt_idx < 2:
+                        err = (exec_result.stderr or "execution failed").strip()[:300]
+                        messages = messages + [{
+                            "role": "assistant",
+                            "content": response_text,
+                        }, {
+                            "role": "user",
+                            "content": (
+                                "Your code failed to execute. Error:\n"
+                                f"{err}\n"
+                                "Fix and return only runnable Python ending with one action print."
+                            ),
+                        }]
+                    continue
+
+                had_exec_ok = True
+                exec_ok_count += 1
+                if exec_result.stdout and exec_result.stdout.strip():
+                    predicted = exec_result.stdout.strip().splitlines()[-1].strip()
+                    parsed_stats = "vpip" in exec_result.stdout.lower()
+                    break
+
+                stdout_empty_count += 1
+                if attempt_idx < 2:
+                    messages = messages + [{
+                        "role": "assistant",
+                        "content": response_text,
+                    }, {
+                        "role": "user",
+                        "content": (
+                            "Your code ran but did not print an action.\n"
+                            "Return only runnable Python and ensure the final printed line is "
+                            "exactly one action: fold/check/call $X/raise $X."
+                        ),
+                    }]
+
+            # Fallback: parse direct action text when code path still fails.
+            if not predicted:
+                used_fallback = True
+                fallback_used_count += 1
+                pred_type, pred_amt = parse_action(response_text)
+                if pred_type == "fold" and not self._looks_like_action_text(response_text):
+                    parse_failed_count += 1
+                predicted = self._action_to_text(pred_type, pred_amt)
 
             reward = compute_poker_reward_simple(predicted, correct_answer)
+            # Small shaping bonuses to encourage executable behavior.
+            if had_code:
+                reward += 0.05
+            if had_exec_ok:
+                reward += 0.10
+            reward = min(reward, 1.0)
+            if reward > 0:
+                nonzero_reward_count += 1
 
             pred_type, pred_amt = parse_action(predicted)
             trajectories.append(PokerTrajectory(
@@ -514,13 +682,26 @@ class PokerReinforceTrainer:
                 action_amount=pred_amt,
                 parsed_stats=parsed_stats,
             ))
+            if generated_ids is None:
+                # Should not occur in practice, but protects log-prob computation path.
+                continue
             rollout_data.append((messages, generated_ids))
 
-        if not trajectories:
+        if not trajectories or not rollout_data:
             return {
                 "accuracy": 0.0, "avg_reward": 0.0,
                 "loss": 0.0, "baseline": self.reward_baseline,
                 "batch_size": 0,
+                "attempted": attempted,
+                "code_extracted": extracted,
+                "exec_ok": exec_ok_count,
+                "nonzero_reward": nonzero_reward_count,
+                "no_code": no_code_count,
+                "exec_error": exec_error_count,
+                "stdout_empty": stdout_empty_count,
+                "fallback_used": fallback_used_count,
+                "parse_failed": parse_failed_count,
+                "wrapped_action_code": wrapped_action_code_count,
             }
 
         # Compute advantages
@@ -555,6 +736,16 @@ class PokerReinforceTrainer:
             "loss": total_loss / len(trajectories),
             "baseline": self.reward_baseline,
             "batch_size": len(trajectories),
+            "attempted": attempted,
+            "code_extracted": extracted,
+            "exec_ok": exec_ok_count,
+            "nonzero_reward": nonzero_reward_count,
+            "no_code": no_code_count,
+            "exec_error": exec_error_count,
+            "stdout_empty": stdout_empty_count,
+            "fallback_used": fallback_used_count,
+            "parse_failed": parse_failed_count,
+            "wrapped_action_code": wrapped_action_code_count,
         }
         self.history.append(stats)
         return stats
@@ -570,7 +761,15 @@ class PokerReinforceTrainer:
                 f"acc={stats['accuracy']:.1%} | "
                 f"reward={stats['avg_reward']:.3f} | "
                 f"loss={stats['loss']:.4f} | "
-                f"baseline={stats['baseline']:.3f}"
+                f"baseline={stats['baseline']:.3f} | "
+                f"code={stats['code_extracted']}/{stats['attempted']} | "
+                f"exec_ok={stats['exec_ok']} | "
+                f"nz_reward={stats['nonzero_reward']} | "
+                f"fb={stats['fallback_used']} | "
+                f"no_code={stats['no_code']} | "
+                f"exec_err={stats['exec_error']} | "
+                f"stdout_empty={stats['stdout_empty']} | "
+                f"wrapped={stats['wrapped_action_code']}"
             )
 
             if (i + 1) % 5 == 0:
