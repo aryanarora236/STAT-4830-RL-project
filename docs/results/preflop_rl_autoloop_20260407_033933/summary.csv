@@ -1,0 +1,3 @@
+attempt,initial_acc,final_acc,improved,remote_output
+1,50.0,50.0,False,./checkpoints/poker_rl_preflop_try1
+2,33.3,66.7,True,./checkpoints/poker_rl_preflop_try2

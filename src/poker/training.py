@@ -387,11 +387,13 @@ class PokerReinforceTrainer:
         tokenizer,
         output_dir: str = "./checkpoints/poker_rl",
         batch_size: int = 8,
-        learning_rate: float = 1e-5,
+        learning_rate: float = 5e-6,
         max_new_tokens: int = 1024,
         max_length: int = 2048,
         baseline_ema: float = 0.9,
         max_grad_norm: float = 1.0,
+        advantage_clip: float = 2.0,
+        task_generator: Callable = generate_poker_task,
     ):
         if not _torch_available:
             raise ImportError("PyTorch required for RL training")
@@ -404,6 +406,8 @@ class PokerReinforceTrainer:
         self.max_length = max_length
         self.baseline_ema = baseline_ema
         self.max_grad_norm = max_grad_norm
+        self.advantage_clip = advantage_clip
+        self.task_generator = task_generator
 
         trainable_params = [p for p in model.parameters() if p.requires_grad]
         self.optimizer = torch.optim.AdamW(trainable_params, lr=learning_rate)
@@ -430,8 +434,8 @@ class PokerReinforceTrainer:
                 **inputs,
                 max_new_tokens=self.max_new_tokens,
                 do_sample=True,
-                temperature=0.2,
-                top_p=0.95,
+                temperature=0.15,
+                top_p=0.9,
                 pad_token_id=self.tokenizer.pad_token_id,
             )
 
@@ -542,7 +546,7 @@ class PokerReinforceTrainer:
 
         for _ in range(self.batch_size):
             attempted += 1
-            context, question, correct_answer = generate_poker_task()
+            context, question, correct_answer = self.task_generator()
             base_messages = format_poker_prompt(question, context)
             base_messages[-1]["content"] += (
                 "\n\nImportant output format:\n"
@@ -558,9 +562,6 @@ class PokerReinforceTrainer:
             code = None
             predicted = ""
             parsed_stats = False
-            used_fallback = False
-            had_code = False
-            had_exec_ok = False
 
             # Retry generation to recover executable code before fallback.
             for attempt_idx in range(3):
@@ -606,7 +607,6 @@ class PokerReinforceTrainer:
                         }]
                     continue
 
-                had_code = True
                 extracted += 1
                 exec_result = safe_execute_code(code, custom_globals={"CONTEXT": context})
 
@@ -627,7 +627,6 @@ class PokerReinforceTrainer:
                         }]
                     continue
 
-                had_exec_ok = True
                 exec_ok_count += 1
                 if exec_result.stdout and exec_result.stdout.strip():
                     predicted = exec_result.stdout.strip().splitlines()[-1].strip()
@@ -650,7 +649,6 @@ class PokerReinforceTrainer:
 
             # Fallback: parse direct action text when code path still fails.
             if not predicted:
-                used_fallback = True
                 fallback_used_count += 1
                 pred_type, pred_amt = parse_action(response_text)
                 if pred_type == "fold" and not self._looks_like_action_text(response_text):
@@ -658,12 +656,6 @@ class PokerReinforceTrainer:
                 predicted = self._action_to_text(pred_type, pred_amt)
 
             reward = compute_poker_reward_simple(predicted, correct_answer)
-            # Small shaping bonuses to encourage executable behavior.
-            if had_code:
-                reward += 0.05
-            if had_exec_ok:
-                reward += 0.10
-            reward = min(reward, 1.0)
             if reward > 0:
                 nonzero_reward_count += 1
 
@@ -712,6 +704,12 @@ class PokerReinforceTrainer:
             + (1 - self.baseline_ema) * avg_reward
         )
         advantages = [r - self.reward_baseline for r in rewards]
+        # Normalize and clip advantages to reduce REINFORCE update variance.
+        adv_tensor = torch.tensor(advantages, device=self.model.device, dtype=torch.float32)
+        adv_std = adv_tensor.std(unbiased=False).clamp_min(1e-6)
+        adv_tensor = (adv_tensor - adv_tensor.mean()) / adv_std
+        adv_tensor = torch.clamp(adv_tensor, -self.advantage_clip, self.advantage_clip)
+        advantages = adv_tensor.tolist()
 
         # Policy gradient
         self.optimizer.zero_grad()

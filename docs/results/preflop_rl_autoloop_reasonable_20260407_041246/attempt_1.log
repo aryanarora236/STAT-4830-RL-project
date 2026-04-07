@@ -1,0 +1,35 @@
+
+============================================================
+POKER PHASE 2: REINFORCE
+============================================================
+
+Loading model from: ./checkpoints/poker_rl_preflop_try2
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]
+Loading weights:   8%|▊         | 28/338 [00:00<00:01, 278.05it/s]
+Loading weights:  46%|████▋     | 157/338 [00:00<00:00, 871.50it/s]
+Loading weights:  83%|████████▎ | 281/338 [00:00<00:00, 1031.69it/s]
+Loading weights: 100%|██████████| 338/338 [00:00<00:00, 985.11it/s] 
+Loaded checkpoint from ./checkpoints/poker_rl_preflop_try2
+Trainable params: 4,358,144 / 892,974,592 (0.49%)
+
+--- Poker REINFORCE: 10 iters, batch=8 ---
+  Iter 1/10: acc=37.5% | reward=0.375 | loss=27.3633 | baseline=0.019 | code=8/8 | exec_ok=8 | nz_reward=3 | fb=0 | no_code=16 | exec_err=0 | stdout_empty=0 | wrapped=8
+  Iter 2/10: acc=0.0% | reward=0.000 | loss=0.0000 | baseline=0.018 | code=8/8 | exec_ok=8 | nz_reward=0 | fb=0 | no_code=16 | exec_err=0 | stdout_empty=0 | wrapped=8
+  Iter 3/10: acc=50.0% | reward=0.500 | loss=9.5732 | baseline=0.042 | code=8/8 | exec_ok=8 | nz_reward=4 | fb=0 | no_code=16 | exec_err=0 | stdout_empty=0 | wrapped=8
+  Iter 4/10: acc=12.5% | reward=0.125 | loss=-5.0996 | baseline=0.046 | code=8/8 | exec_ok=8 | nz_reward=1 | fb=0 | no_code=16 | exec_err=0 | stdout_empty=0 | wrapped=8
+  Iter 5/10: acc=50.0% | reward=0.500 | loss=1.2578 | baseline=0.069 | code=8/8 | exec_ok=8 | nz_reward=4 | fb=0 | no_code=16 | exec_err=0 | stdout_empty=0 | wrapped=8
+    Checkpoint saved to ./checkpoints/poker_rl_preflop_reasonable_try1/iter_5
+  Iter 6/10: acc=0.0% | reward=0.000 | loss=0.0000 | baseline=0.065 | code=8/8 | exec_ok=8 | nz_reward=0 | fb=0 | no_code=16 | exec_err=0 | stdout_empty=0 | wrapped=8
+  Iter 7/10: acc=37.5% | reward=0.375 | loss=-8.1094 | baseline=0.081 | code=8/8 | exec_ok=8 | nz_reward=3 | fb=0 | no_code=16 | exec_err=0 | stdout_empty=0 | wrapped=8
+  Iter 8/10: acc=37.5% | reward=0.375 | loss=0.9922 | baseline=0.096 | code=8/8 | exec_ok=8 | nz_reward=3 | fb=0 | no_code=16 | exec_err=0 | stdout_empty=0 | wrapped=8
+  Iter 9/10: acc=12.5% | reward=0.125 | loss=3.9102 | baseline=0.097 | code=8/8 | exec_ok=8 | nz_reward=1 | fb=0 | no_code=16 | exec_err=0 | stdout_empty=0 | wrapped=8
+  Iter 10/10: acc=50.0% | reward=0.500 | loss=-4.0781 | baseline=0.117 | code=8/8 | exec_ok=8 | nz_reward=4 | fb=0 | no_code=16 | exec_err=0 | stdout_empty=0 | wrapped=8
+    Checkpoint saved to ./checkpoints/poker_rl_preflop_reasonable_try1/iter_10
+--- Training complete. Model saved to ./checkpoints/poker_rl_preflop_reasonable_try1 ---
+
+REINFORCE summary:
+  Accuracy: 37.5% -> 50.0%
+  Reward:   0.375 -> 0.500
+  Loss:     27.3633 -> -4.0781

@@ -92,6 +92,13 @@ def run_rl(args, model=None, tokenizer=None):
             load_in_4bit=not args.full_precision,
         )
 
+    if args.rl_task_mode == "preflop":
+        rl_task_generator = generate_preflop_task
+    elif args.rl_task_mode == "postflop":
+        rl_task_generator = generate_postflop_task
+    else:
+        rl_task_generator = generate_poker_task
+
     trainer = PokerReinforceTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -100,6 +107,9 @@ def run_rl(args, model=None, tokenizer=None):
         learning_rate=args.rl_lr,
         max_new_tokens=args.max_new_tokens,
         max_length=args.max_length,
+        baseline_ema=args.rl_baseline_ema,
+        advantage_clip=args.rl_adv_clip,
+        task_generator=rl_task_generator,
     )
 
     history = trainer.train(num_iterations=args.rl_iterations)
@@ -190,8 +200,11 @@ def main():
     # RL
     parser.add_argument("--rl-model", default=None, help="Checkpoint to start RL from (default: BC output)")
     parser.add_argument("--rl-iterations", type=int, default=20)
-    parser.add_argument("--rl-batch-size", type=int, default=8)
-    parser.add_argument("--rl-lr", type=float, default=1e-5)
+    parser.add_argument("--rl-batch-size", type=int, default=12)
+    parser.add_argument("--rl-lr", type=float, default=5e-6)
+    parser.add_argument("--rl-baseline-ema", type=float, default=0.95)
+    parser.add_argument("--rl-adv-clip", type=float, default=2.0)
+    parser.add_argument("--rl-task-mode", choices=["all", "preflop", "postflop"], default="all")
     parser.add_argument("--rl-output", default="./checkpoints/poker_rl")
 
     # Eval

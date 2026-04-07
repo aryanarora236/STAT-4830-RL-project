@@ -1,0 +1,17 @@
+{
+  "goal": "final_accuracy_greater_than_initial_accuracy",
+  "experiment_cap": "10 iterations, timeout 55 minutes",
+  "achieved": true,
+  "max_attempts": 4,
+  "best_attempt": {
+    "attempt": 1,
+    "initial_acc": 37.5,
+    "final_acc": 50.0,
+    "remote_output": "./checkpoints/poker_rl_preflop_reasonable_try1",
+    "return_code": 0,
+    "improved": true,
+    "runtime_sec": 2917.95,
+    "timed_out": false
+  },
+  "summary_csv": "/Users/aryan/statprojects/STAT-4830-RL-project/docs/results/preflop_rl_autoloop_reasonable_20260407_041246/summary.csv"
+}

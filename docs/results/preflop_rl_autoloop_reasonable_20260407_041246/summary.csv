@@ -1,0 +1,2 @@
+attempt,initial_acc,final_acc,improved,runtime_sec,timed_out,remote_output
+1,37.5,50.0,True,2917.95,False,./checkpoints/poker_rl_preflop_reasonable_try1

@@ -1,0 +1,27 @@
+
+============================================================
+POKER PHASE 2: REINFORCE
+============================================================
+
+Loading model from: ./checkpoints/poker_rl
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]
+Loading weights:   8%|▊         | 27/338 [00:00<00:01, 264.11it/s]
+Loading weights:  44%|████▍     | 149/338 [00:00<00:00, 818.35it/s]
+Loading weights:  83%|████████▎ | 280/338 [00:00<00:00, 1032.14it/s]
+Loading weights: 100%|██████████| 338/338 [00:00<00:00, 971.33it/s] 
+Loaded checkpoint from ./checkpoints/poker_rl
+Trainable params: 4,358,144 / 892,974,592 (0.49%)
+
+--- Poker REINFORCE: 4 iters, batch=6 ---
+  Iter 1/4: acc=33.3% | reward=0.333 | loss=-4.5104 | baseline=0.017 | code=6/6 | exec_ok=6 | nz_reward=2 | fb=0 | no_code=12 | exec_err=0 | stdout_empty=0 | wrapped=6
+  Iter 2/4: acc=16.7% | reward=0.167 | loss=0.8333 | baseline=0.024 | code=6/6 | exec_ok=6 | nz_reward=1 | fb=0 | no_code=12 | exec_err=0 | stdout_empty=0 | wrapped=6
+  Iter 3/4: acc=33.3% | reward=0.333 | loss=-3.9375 | baseline=0.040 | code=6/6 | exec_ok=6 | nz_reward=2 | fb=0 | no_code=12 | exec_err=0 | stdout_empty=0 | wrapped=6
+  Iter 4/4: acc=66.7% | reward=0.667 | loss=1.7604 | baseline=0.071 | code=6/6 | exec_ok=6 | nz_reward=4 | fb=0 | no_code=12 | exec_err=0 | stdout_empty=0 | wrapped=6
+--- Training complete. Model saved to ./checkpoints/poker_rl_preflop_try2 ---
+
+REINFORCE summary:
+  Accuracy: 33.3% -> 66.7%
+  Reward:   0.333 -> 0.667
+  Loss:     -4.5104 -> 1.7604

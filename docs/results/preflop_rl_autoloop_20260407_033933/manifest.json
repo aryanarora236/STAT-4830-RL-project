@@ -1,0 +1,14 @@
+{
+  "goal": "final_accuracy_greater_than_initial_accuracy",
+  "achieved": true,
+  "max_attempts": 6,
+  "best_attempt": {
+    "attempt": 2,
+    "initial_acc": 33.3,
+    "final_acc": 66.7,
+    "remote_output": "./checkpoints/poker_rl_preflop_try2",
+    "return_code": 0,
+    "improved": true
+  },
+  "summary_csv": "/Users/aryan/statprojects/STAT-4830-RL-project/docs/results/preflop_rl_autoloop_20260407_033933/summary.csv"
+}
