@@ -21,7 +21,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.training import load_model, LORA_PRESETS
+from src.training import load_model, LORA_PRESETS, set_training_seed
 from src.poker.tasks import generate_poker_task, generate_preflop_task, generate_postflop_task
 from src.poker.training import (
     collect_poker_trajectories,
@@ -31,6 +31,17 @@ from src.poker.training import (
 )
 from src.poker.agents import PokerHeuristicAgent, PokerLocalLLMAgent
 from src.poker.evaluation import PokerEvaluationFramework
+
+
+def _bc_task_generators(mix: str):
+    """Task generators for BC when rolling out the heuristic agent (not trace mode)."""
+    if mix == "mixed":
+        return [generate_poker_task, generate_preflop_task, generate_postflop_task]
+    if mix == "preflop":
+        return [generate_preflop_task]
+    if mix == "postflop":
+        return [generate_postflop_task]
+    return [generate_poker_task]
 
 
 def run_bc(args):
@@ -44,12 +55,16 @@ def run_bc(args):
         print(f"\nCollecting {args.episodes} heuristic trace trajectories...")
         trajectories = collect_poker_trajectories_with_traces(num_episodes=args.episodes)
     else:
-        print(f"\nCollecting {args.episodes} trajectories via PokerHeuristicAgent...")
+        task_gens = _bc_task_generators(args.bc_task_mix)
+        print(
+            f"\nCollecting {args.episodes} trajectories via PokerHeuristicAgent "
+            f"(bc_task_mix={args.bc_task_mix}, {len(task_gens)} generator(s))..."
+        )
         heuristic_agent = PokerHeuristicAgent()
         trajectories = collect_poker_trajectories(
             heuristic_agent,
             num_episodes=args.episodes,
-            task_generators=[generate_poker_task],
+            task_generators=task_gens,
         )
 
     successful = sum(1 for t in trajectories if t.is_correct and t.code)
@@ -74,6 +89,9 @@ def run_bc(args):
         batch_size=args.batch_size,
         learning_rate=args.bc_lr,
         max_length=args.max_length,
+        gradient_accumulation_steps=args.bc_grad_accum,
+        weight_decay=args.bc_weight_decay,
+        seed=args.seed if args.seed >= 0 else None,
     )
     result = trainer.train(trajectories)
     print(f"\nBC training complete: {result}")
@@ -114,6 +132,8 @@ def run_rl(args, model=None, tokenizer=None):
         advantage_clip=args.rl_adv_clip,
         task_generator=rl_task_generator,
         ema_gamma=args.ema_gamma,
+        sample_temperature=args.rl_sample_temperature,
+        sample_top_p=args.rl_top_p,
     )
 
     history = trainer.train(num_iterations=args.rl_iterations)
@@ -187,6 +207,12 @@ def main():
         default="Qwen/Qwen2.5-Coder-1.5B-Instruct",
         help="Base model ID or checkpoint path",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="RNG seed for task sampling and BC trainer (use -1 to skip set_training_seed)",
+    )
 
     # Shared/model
     parser.add_argument("--full-precision", action="store_true", help="Disable 4-bit quantization")
@@ -200,9 +226,27 @@ def main():
     # BC
     parser.add_argument("--episodes", type=int, default=500, help="Trajectory count for BC")
     parser.add_argument("--bc-source", choices=["traces", "agent"], default="traces")
+    parser.add_argument(
+        "--bc-task-mix",
+        choices=["all", "mixed", "preflop", "postflop"],
+        default="all",
+        help="When bc_source=agent: which task distribution to sample (mixed = street-balanced mix)",
+    )
     parser.add_argument("--bc-epochs", type=int, default=3)
     parser.add_argument("--bc-lr", type=float, default=2e-4)
     parser.add_argument("--batch-size", type=int, default=4)
+    parser.add_argument(
+        "--bc-grad-accum",
+        type=int,
+        default=2,
+        help="Gradient accumulation for poker BC (increases effective batch size)",
+    )
+    parser.add_argument(
+        "--bc-weight-decay",
+        type=float,
+        default=0.0,
+        help="AdamW weight decay during BC; try 0.01 if overfitting small trace sets",
+    )
     parser.add_argument("--bc-output", default="./checkpoints/poker_bc")
 
     # RL
@@ -214,6 +258,18 @@ def main():
     parser.add_argument("--rl-adv-clip", type=float, default=2.0)
     parser.add_argument("--rl-task-mode", choices=["all", "preflop", "postflop"], default="all")
     parser.add_argument("--ema-gamma", type=float, default=0.9, help="EMA decay for reward/accuracy tracking")
+    parser.add_argument(
+        "--rl-sample-temperature",
+        type=float,
+        default=0.15,
+        help="Rollout sampling temperature for poker REINFORCE (higher = more exploration)",
+    )
+    parser.add_argument(
+        "--rl-top-p",
+        type=float,
+        default=0.9,
+        help="Nucleus sampling top_p during poker REINFORCE rollouts",
+    )
     parser.add_argument("--rl-output", default="./checkpoints/poker_rl")
 
     # Eval
@@ -225,6 +281,9 @@ def main():
     parser.add_argument("--no-heuristic-baseline", action="store_true")
 
     args = parser.parse_args()
+
+    if args.seed >= 0:
+        set_training_seed(args.seed)
 
     if args.phase == "bc":
         run_bc(args)

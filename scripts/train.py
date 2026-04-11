@@ -28,6 +28,7 @@ from src.training import (
     collect_trajectories,
     BehaviorCloningTrainer,
     ReinforceTrainer,
+    set_training_seed,
 )
 
 
@@ -72,6 +73,9 @@ def run_bc(args):
         num_epochs=args.bc_epochs,
         batch_size=args.batch_size,
         learning_rate=args.bc_lr,
+        gradient_accumulation_steps=args.bc_grad_accum,
+        weight_decay=args.bc_weight_decay,
+        seed=args.seed if args.seed >= 0 else None,
     )
     result = bc_trainer.train(trajectories)
     print(f"\nBC training complete: {result}")
@@ -102,6 +106,9 @@ def run_rl(args, model=None, tokenizer=None):
         output_dir=args.rl_output,
         batch_size=args.rl_batch_size,
         learning_rate=args.rl_lr,
+        advantage_clip=args.rl_adv_clip,
+        sample_temperature=args.rl_sample_temperature,
+        sample_top_p=args.rl_top_p,
     )
 
     history = rl_trainer.train(num_iterations=args.rl_iterations)
@@ -180,6 +187,18 @@ def main():
     parser.add_argument("--bc-lr", type=float, default=2e-4)
     parser.add_argument("--bc-output", default="./checkpoints/bc")
     parser.add_argument("--batch-size", type=int, default=4)
+    parser.add_argument(
+        "--bc-grad-accum",
+        type=int,
+        default=2,
+        help="Gradient accumulation steps for BC (larger effective batch, stabler SFT)",
+    )
+    parser.add_argument(
+        "--bc-weight-decay",
+        type=float,
+        default=0.0,
+        help="AdamW weight decay during BC (light regularization on small SFT sets)",
+    )
 
     # RL arguments
     parser.add_argument("--rl-model", default=None,
@@ -187,6 +206,19 @@ def main():
     parser.add_argument("--rl-iterations", type=int, default=20)
     parser.add_argument("--rl-batch-size", type=int, default=8)
     parser.add_argument("--rl-lr", type=float, default=1e-5)
+    parser.add_argument(
+        "--rl-adv-clip",
+        type=float,
+        default=2.0,
+        help="Clamp normalized REINFORCE advantages to [-clip, clip]",
+    )
+    parser.add_argument(
+        "--rl-sample-temperature",
+        type=float,
+        default=0.7,
+        help="Sampling temperature during RL rollouts",
+    )
+    parser.add_argument("--rl-top-p", type=float, default=0.9, help="Top-p during RL rollouts")
     parser.add_argument("--rl-output", default="./checkpoints/rl")
 
     # Eval arguments
@@ -198,8 +230,17 @@ def main():
     parser.add_argument("--lora-r", type=int, default=16)
     parser.add_argument("--full-precision", action="store_true",
                         help="Disable 4-bit quantization (uses more VRAM)")
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="RNG seed for trajectory sampling and BC (use -1 to skip set_training_seed)",
+    )
 
     args = parser.parse_args()
+
+    if args.seed >= 0:
+        set_training_seed(args.seed)
 
     if args.phase == "bc":
         run_bc(args)
