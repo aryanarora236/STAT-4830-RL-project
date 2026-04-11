@@ -37,6 +37,26 @@ from src.models import Agent, _LLM_SYSTEM_PROMPT, extract_code_from_response
 # Model loading
 # ---------------------------------------------------------------------------
 
+def set_training_seed(seed: int) -> None:
+    """
+    Set RNG seeds for reproducible trajectory sampling and trainer init.
+
+    Use a nonnegative seed before collecting data or launching HF trainers.
+    """
+    if seed < 0:
+        return
+    random.seed(seed)
+    if _torch_available:
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+    try:
+        import numpy as np
+        np.random.seed(seed)
+    except ImportError:
+        pass
+
+
 LORA_PRESETS = {
     "attention": ["q_proj", "v_proj", "k_proj", "o_proj"],
     "mlp": ["gate_proj", "up_proj", "down_proj"],
@@ -362,6 +382,9 @@ class BehaviorCloningTrainer:
         batch_size: int = 4,
         learning_rate: float = 2e-4,
         max_length: int = 2048,
+        gradient_accumulation_steps: int = 2,
+        weight_decay: float = 0.0,
+        seed: Optional[int] = None,
     ):
         self.model = model
         self.tokenizer = tokenizer
@@ -370,6 +393,9 @@ class BehaviorCloningTrainer:
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.max_length = max_length
+        self.gradient_accumulation_steps = gradient_accumulation_steps
+        self.weight_decay = weight_decay
+        self.seed = seed
 
     def train(self, trajectories: List[RLTrajectory]) -> Dict[str, Any]:
         """Run behavior cloning on successful trajectories."""
@@ -401,6 +427,11 @@ class BehaviorCloningTrainer:
             else:
                 use_fp16 = True
 
+        seed_kwargs: Dict[str, Any] = {}
+        if self.seed is not None:
+            seed_kwargs["seed"] = self.seed
+            seed_kwargs["data_seed"] = self.seed
+
         training_args = SFTConfig(
             output_dir=self.output_dir,
             num_train_epochs=self.num_epochs,
@@ -412,12 +443,14 @@ class BehaviorCloningTrainer:
             save_total_limit=2,
             bf16=use_bf16,
             fp16=use_fp16,
-            gradient_accumulation_steps=2,
+            gradient_accumulation_steps=self.gradient_accumulation_steps,
             warmup_ratio=0.1,
             lr_scheduler_type="cosine",
             dataset_text_field="text",
             gradient_checkpointing=True,
             optim="adamw_torch",
+            weight_decay=self.weight_decay,
+            **seed_kwargs,
         )
 
         trainer = SFTTrainer(
@@ -470,6 +503,9 @@ class ReinforceTrainer:
         max_length: int = 2048,
         baseline_ema: float = 0.9,
         max_grad_norm: float = 1.0,
+        advantage_clip: float = 2.0,
+        sample_temperature: float = 0.7,
+        sample_top_p: float = 0.9,
     ):
         self.model = model
         self.tokenizer = tokenizer
@@ -480,6 +516,9 @@ class ReinforceTrainer:
         self.max_length = max_length
         self.baseline_ema = baseline_ema
         self.max_grad_norm = max_grad_norm
+        self.advantage_clip = advantage_clip
+        self.sample_temperature = sample_temperature
+        self.sample_top_p = sample_top_p
 
         # Optimizer over LoRA parameters only
         trainable_params = [p for p in model.parameters() if p.requires_grad]
@@ -505,8 +544,8 @@ class ReinforceTrainer:
                 **inputs,
                 max_new_tokens=self.max_new_tokens,
                 do_sample=True,
-                temperature=0.7,
-                top_p=0.9,
+                temperature=self.sample_temperature,
+                top_p=self.sample_top_p,
                 pad_token_id=self.tokenizer.pad_token_id,
             )
 
@@ -622,6 +661,13 @@ class ReinforceTrainer:
             + (1 - self.baseline_ema) * avg_reward
         )
         advantages = [r - self.reward_baseline for r in rewards]
+        adv_tensor = torch.tensor(
+            advantages, device=self.model.device, dtype=torch.float32
+        )
+        adv_std = adv_tensor.std(unbiased=False).clamp_min(1e-6)
+        adv_tensor = (adv_tensor - adv_tensor.mean()) / adv_std
+        adv_tensor = torch.clamp(adv_tensor, -self.advantage_clip, self.advantage_clip)
+        advantages = adv_tensor.tolist()
 
         # --- 3. Policy gradient loss ---
         self.optimizer.zero_grad()
