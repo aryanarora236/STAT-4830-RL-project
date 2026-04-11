@@ -305,6 +305,9 @@ class PokerBCTrainer:
         batch_size: int = 4,
         learning_rate: float = 2e-4,
         max_length: int = 4096,
+        gradient_accumulation_steps: int = 2,
+        weight_decay: float = 0.0,
+        seed: Optional[int] = None,
     ):
         self.model = model
         self.tokenizer = tokenizer
@@ -313,6 +316,9 @@ class PokerBCTrainer:
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.max_length = max_length
+        self.gradient_accumulation_steps = gradient_accumulation_steps
+        self.weight_decay = weight_decay
+        self.seed = seed
 
     def train(self, trajectories: List[PokerTrajectory]) -> Dict[str, Any]:
         """Run behavior cloning on successful trajectories."""
@@ -343,6 +349,11 @@ class PokerBCTrainer:
             else:  # Turing (T4), Volta (V100), etc.
                 use_fp16 = True
 
+        seed_kwargs: Dict[str, Any] = {}
+        if self.seed is not None:
+            seed_kwargs["seed"] = self.seed
+            seed_kwargs["data_seed"] = self.seed
+
         training_args = SFTConfig(
             output_dir=self.output_dir,
             num_train_epochs=self.num_epochs,
@@ -354,12 +365,14 @@ class PokerBCTrainer:
             save_total_limit=2,
             bf16=use_bf16,
             fp16=use_fp16,
-            gradient_accumulation_steps=2,
+            gradient_accumulation_steps=self.gradient_accumulation_steps,
             warmup_ratio=0.1,
             lr_scheduler_type="cosine",
             dataset_text_field="text",
             gradient_checkpointing=True,
             optim="adamw_torch",
+            weight_decay=self.weight_decay,
+            **seed_kwargs,
         )
 
         trainer = SFTTrainer(
@@ -408,6 +421,8 @@ class PokerReinforceTrainer:
         advantage_clip: float = 2.0,
         task_generator: Callable = generate_poker_task,
         ema_gamma: float = 0.9,
+        sample_temperature: float = 0.15,
+        sample_top_p: float = 0.9,
     ):
         if not _torch_available:
             raise ImportError("PyTorch required for RL training")
@@ -423,6 +438,8 @@ class PokerReinforceTrainer:
         self.advantage_clip = advantage_clip
         self.task_generator = task_generator
         self.ema_gamma = ema_gamma
+        self.sample_temperature = sample_temperature
+        self.sample_top_p = sample_top_p
 
         trainable_params = [p for p in model.parameters() if p.requires_grad]
         self.optimizer = torch.optim.AdamW(trainable_params, lr=learning_rate)
@@ -451,8 +468,8 @@ class PokerReinforceTrainer:
                 **inputs,
                 max_new_tokens=self.max_new_tokens,
                 do_sample=True,
-                temperature=0.15,
-                top_p=0.9,
+                temperature=self.sample_temperature,
+                top_p=self.sample_top_p,
                 pad_token_id=self.tokenizer.pad_token_id,
             )
 
