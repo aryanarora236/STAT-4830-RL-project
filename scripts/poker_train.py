@@ -16,13 +16,20 @@ Usage examples:
 """
 
 import argparse
+import json
 import os
 import sys
+from typing import Any, Dict, Tuple
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.training import load_model, LORA_PRESETS, set_training_seed
-from src.poker.tasks import generate_poker_task, generate_preflop_task, generate_postflop_task
+from src.poker.tasks import (
+    generate_poker_task,
+    generate_preflop_task,
+    generate_postflop_task,
+    bc_agent_task_generators,
+)
 from src.poker.training import (
     collect_poker_trajectories,
     collect_poker_trajectories_with_traces,
@@ -31,17 +38,6 @@ from src.poker.training import (
 )
 from src.poker.agents import PokerHeuristicAgent, PokerLocalLLMAgent
 from src.poker.evaluation import PokerEvaluationFramework
-
-
-def _bc_task_generators(mix: str):
-    """Task generators for BC when rolling out the heuristic agent (not trace mode)."""
-    if mix == "mixed":
-        return [generate_poker_task, generate_preflop_task, generate_postflop_task]
-    if mix == "preflop":
-        return [generate_preflop_task]
-    if mix == "postflop":
-        return [generate_postflop_task]
-    return [generate_poker_task]
 
 
 def run_bc(args):
@@ -55,7 +51,7 @@ def run_bc(args):
         print(f"\nCollecting {args.episodes} heuristic trace trajectories...")
         trajectories = collect_poker_trajectories_with_traces(num_episodes=args.episodes)
     else:
-        task_gens = _bc_task_generators(args.bc_task_mix)
+        task_gens = bc_agent_task_generators(args.bc_task_mix)
         print(
             f"\nCollecting {args.episodes} trajectories via PokerHeuristicAgent "
             f"(bc_task_mix={args.bc_task_mix}, {len(task_gens)} generator(s))..."
@@ -149,7 +145,7 @@ def run_rl(args, model=None, tokenizer=None):
     return model, tokenizer, history
 
 
-def _eval_one(name, task_gen, agents, episodes):
+def _eval_one(name, task_gen, agents, episodes) -> Tuple[str, PokerEvaluationFramework]:
     print(f"\n--- {name} ---")
     fw = PokerEvaluationFramework(
         agents=agents,
@@ -158,6 +154,7 @@ def _eval_one(name, task_gen, agents, episodes):
     )
     fw.run_evaluation()
     fw.display_results()
+    return name, fw
 
 
 def run_eval(args, model=None, tokenizer=None):
@@ -166,8 +163,8 @@ def run_eval(args, model=None, tokenizer=None):
     print("POKER EVALUATION")
     print("=" * 60)
 
+    load_path = args.eval_model or args.rl_output
     if model is None:
-        load_path = args.eval_model or args.rl_output
         print(f"\nLoading model from: {load_path}")
         model, tokenizer = load_model(
             model_id_or_path=load_path,
@@ -184,10 +181,31 @@ def run_eval(args, model=None, tokenizer=None):
     heuristic = PokerHeuristicAgent()
     agents = [local_agent] if args.no_heuristic_baseline else [local_agent, heuristic]
 
-    _eval_one("All Streets", generate_poker_task, agents, args.eval_episodes)
+    suites: Dict[str, Any] = {}
+    name, fw = _eval_one("All Streets", generate_poker_task, agents, args.eval_episodes)
+    suites[name] = fw.export_run_summary()
     if args.eval_by_street:
-        _eval_one("Preflop", generate_preflop_task, agents, args.eval_episodes)
-        _eval_one("Postflop", generate_postflop_task, agents, args.eval_episodes)
+        name, fw = _eval_one("Preflop", generate_preflop_task, agents, args.eval_episodes)
+        suites[name] = fw.export_run_summary()
+        name, fw = _eval_one("Postflop", generate_postflop_task, agents, args.eval_episodes)
+        suites[name] = fw.export_run_summary()
+
+    if args.eval_json:
+        meta: Dict[str, Any] = {
+            "checkpoint": load_path,
+            "eval_episodes": args.eval_episodes,
+            "eval_by_street": args.eval_by_street,
+            "eval_temperature": args.eval_temperature,
+            "seed": args.seed,
+            "no_heuristic_baseline": args.no_heuristic_baseline,
+        }
+        out_path = args.eval_json
+        parent = os.path.dirname(os.path.abspath(out_path))
+        if parent:
+            os.makedirs(parent, exist_ok=True)
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump({"meta": meta, "suites": suites}, f, indent=2)
+        print(f"\nWrote evaluation report to {out_path}")
 
 
 def main():
@@ -278,6 +296,12 @@ def main():
     parser.add_argument("--eval-max-steps", type=int, default=5)
     parser.add_argument("--eval-temperature", type=float, default=0.1)
     parser.add_argument("--eval-by-street", action="store_true")
+    parser.add_argument(
+        "--eval-json",
+        default=None,
+        metavar="PATH",
+        help="Write structured metrics (per suite, per agent) to this JSON file",
+    )
     parser.add_argument("--no-heuristic-baseline", action="store_true")
 
     args = parser.parse_args()

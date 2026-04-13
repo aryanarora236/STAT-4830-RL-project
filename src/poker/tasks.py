@@ -11,7 +11,7 @@ so the model must learn to parse history and extract opponent tendencies.
 """
 
 import random
-from typing import Tuple, List, Optional, Dict
+from typing import Tuple, List, Optional, Dict, Callable
 
 from src.poker.environment import (
     Card, Deck, GameState, PlayerState, Action, HandRecord,
@@ -367,6 +367,22 @@ def generate_preflop_task() -> Tuple[str, str, str]:
 
 def generate_postflop_task() -> Tuple[str, str, str]:
     return generate_poker_task(street=random.choice(["flop", "turn", "river"]))
+
+
+def bc_agent_task_generators(mix: str) -> List[Callable[[], Tuple[str, str, str]]]:
+    """
+    Task callables for behavior cloning when rolling out PokerHeuristicAgent.
+
+    ``mixed`` interleaves full-random-street, preflop-only, and postflop-only
+    generators so BC data is not dominated by one street distribution.
+    """
+    if mix == "mixed":
+        return [generate_poker_task, generate_preflop_task, generate_postflop_task]
+    if mix == "preflop":
+        return [generate_preflop_task]
+    if mix == "postflop":
+        return [generate_postflop_task]
+    return [generate_poker_task]
 
 
 def generate_poker_task_with_trace(
