@@ -5,7 +5,10 @@ Compares agents on poker tasks, tracks per-action and per-street accuracy,
 and measures opponent exploitation rate.
 """
 
-from typing import List, Dict, Any, Callable, Tuple
+import json
+import os
+from typing import List, Dict, Any, Callable, Tuple, Optional
+
 from src.models import Agent
 from src.poker.rewards import parse_action, compute_poker_reward_simple
 
@@ -128,8 +131,10 @@ class PokerEvaluationFramework:
         for pred in self.results[agent_name]["predictions"]:
             pred_type = parse_action(pred["predicted"])[0]
             corr_type = parse_action(pred["correct"])[0]
-            if pred_type in matrix and corr_type in matrix[pred_type]:
-                matrix[corr_type][pred_type] += 1
+            # Rows = correct action, columns = predicted (see display_confusion_matrix).
+            if corr_type not in matrix or pred_type not in matrix[corr_type]:
+                continue
+            matrix[corr_type][pred_type] += 1
 
         return matrix
 
@@ -146,3 +151,40 @@ class PokerEvaluationFramework:
             row = f"{true_action:8s} | "
             row += " | ".join(f"{matrix[true_action][pred]:6d}" for pred in actions)
             print(row)
+
+    def export_run_summary(self) -> Dict[str, Any]:
+        """
+        JSON-serializable metrics for one evaluation run.
+
+        Call after run_evaluation(). Omits raw prediction lists to keep files small;
+        use get_confusion_matrix / results for deeper analysis in Python.
+        """
+        if not self.results:
+            return {"agents": {}}
+
+        agents_out: Dict[str, Any] = {}
+        for name, m in self.results.items():
+            total = max(m["total"], 1)
+            agents_out[name] = {
+                "exact_match_rate": round(m["correct"] / total, 4),
+                "type_match_rate": round(m["type_match"] / total, 4),
+                "avg_reward": round(m["total_reward"] / total, 4),
+                "avg_steps": round(m["total_steps"] / total, 2),
+                "total_episodes": m["total"],
+                "by_action": m["by_action"],
+                "by_street": m["by_street"],
+                "confusion_matrix": self.get_confusion_matrix(name),
+            }
+        return {"agents": agents_out}
+
+    def save_results_json(self, path: str, meta: Optional[Dict[str, Any]] = None) -> None:
+        """Write export_run_summary() plus optional metadata to a JSON file."""
+        payload: Dict[str, Any] = {
+            "meta": dict(meta) if meta else {},
+            **self.export_run_summary(),
+        }
+        parent = os.path.dirname(os.path.abspath(path))
+        if parent:
+            os.makedirs(parent, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
