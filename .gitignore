@@ -7,3 +7,19 @@ local/
 __pycache__/
 *.pyc
 .claude/
+.DS_Store
+
+# Training artifacts — checkpoints and logs stay on the training pod
+checkpoints/
+wandb/
+runs/
+*.log
+!docs/results/*.log
+
+# Local venvs created by PrimeIntellect bootstrap
+.venv/
+venv/
+
+# HF caches
+.cache/
+hf_cache/
