@@ -40,6 +40,26 @@ from src.poker.agents import PokerHeuristicAgent, PokerLocalLLMAgent
 from src.poker.evaluation import PokerEvaluationFramework
 
 
+def _log_run_fingerprint(args: argparse.Namespace) -> None:
+    """Print one block of key flags so logs and checkpoints stay attributable."""
+    lines = [
+        f"phase={args.phase} seed={args.seed} model={args.model}",
+    ]
+    if args.phase in ("bc", "full"):
+        lines.append(
+            f"bc: source={args.bc_source} episodes={args.episodes} out={args.bc_output}"
+        )
+    if args.phase in ("rl", "full"):
+        lines.append(
+            f"rl: iters={args.rl_iterations} batch={args.rl_batch_size} out={args.rl_output}"
+        )
+    if args.phase == "eval":
+        lines.append(
+            f"eval: episodes={args.eval_episodes} json={args.eval_json!r}"
+        )
+    print("\n".join(lines), flush=True)
+
+
 def run_bc(args):
     """Phase 1: Behavior cloning on poker trajectories."""
     print("=" * 60)
@@ -305,6 +325,7 @@ def main():
     parser.add_argument("--no-heuristic-baseline", action="store_true")
 
     args = parser.parse_args()
+    _log_run_fingerprint(args)
 
     if args.seed >= 0:
         set_training_seed(args.seed)
