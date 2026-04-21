@@ -1,0 +1,19 @@
+{
+  "num_iterations": 10,
+  "first": {
+    "accuracy": 0.0,
+    "avg_reward": 0.075,
+    "loss": -0.984375
+  },
+  "last": {
+    "accuracy": 0.5,
+    "avg_reward": 0.575,
+    "loss": -0.28125
+  },
+  "best_accuracy": 0.75,
+  "best_reward": 0.75,
+  "paths": {
+    "history_json": "./checkpoints/poker_rl_medium_simple_20260420/training_history.json",
+    "history_csv": "./checkpoints/poker_rl_medium_simple_20260420/training_history.csv"
+  }
+}

@@ -1,0 +1,32 @@
+
+============================================================
+POKER PHASE 2: REINFORCE
+============================================================
+
+Loading model from: ./checkpoints/poker_rl_smoke_test
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:   1%|          | 3/338 [00:00<00:13, 24.51it/s]Loading weights:  19%|█▉        | 64/338 [00:00<00:00, 332.91it/s]Loading weights:  37%|███▋      | 125/338 [00:00<00:00, 443.81it/s]Loading weights:  57%|█████▋    | 192/338 [00:00<00:00, 528.68it/s]Loading weights:  73%|███████▎  | 248/338 [00:00<00:00, 539.23it/s]Loading weights:  90%|█████████ | 305/338 [00:00<00:00, 546.14it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 499.49it/s]
+Loaded checkpoint from ./checkpoints/poker_rl_smoke_test
+Trainable params: 4,358,144 / 892,974,592 (0.49%)
+
+--- Poker REINFORCE: 10 iters, batch=4, ema_gamma=0.9 ---
+  Iter 1/10: acc=0.0% (ema=0.0%) | reward=0.075 (ema=0.075) | loss=-0.9844 | real_code=0/4 | wrapped=4
+  Iter 2/10: acc=25.0% (ema=2.5%) | reward=0.250 (ema=0.092) | loss=0.5625 | real_code=2/4 | wrapped=3
+  Iter 3/10: acc=0.0% (ema=2.2%) | reward=0.000 (ema=0.083) | loss=0.0000 | real_code=0/4 | wrapped=4
+  Iter 4/10: acc=25.0% (ema=4.5%) | reward=0.250 (ema=0.100) | loss=-3.1562 | real_code=0/4 | wrapped=4
+  Iter 5/10: acc=25.0% (ema=6.6%) | reward=0.250 (ema=0.115) | loss=4.6250 | real_code=0/4 | wrapped=4
+    Checkpoint saved to ./checkpoints/poker_rl_medium_simple_20260420/iter_5
+  Iter 6/10: acc=50.0% (ema=10.9%) | reward=0.500 (ema=0.153) | loss=17.5625 | real_code=0/4 | wrapped=4
+  Iter 7/10: acc=75.0% (ema=17.3%) | reward=0.750 (ema=0.213) | loss=-4.5312 | real_code=0/4 | wrapped=4
+  Iter 8/10: acc=25.0% (ema=18.1%) | reward=0.250 (ema=0.217) | loss=3.2031 | real_code=0/4 | wrapped=4
+  Iter 9/10: acc=50.0% (ema=21.3%) | reward=0.500 (ema=0.245) | loss=12.1562 | real_code=0/4 | wrapped=4
+  Iter 10/10: acc=50.0% (ema=24.2%) | reward=0.575 (ema=0.278) | loss=-0.2812 | real_code=1/4 | wrapped=4
+    Checkpoint saved to ./checkpoints/poker_rl_medium_simple_20260420/iter_10
+--- Training complete. Model saved to ./checkpoints/poker_rl_medium_simple_20260420 ---
+Training curves saved to ./checkpoints/poker_rl_medium_simple_20260420/training_curves.png
+Training analysis saved to ./checkpoints/poker_rl_medium_simple_20260420/training_summary.json and ./checkpoints/poker_rl_medium_simple_20260420/training_history.csv
+
+REINFORCE summary:
+  Accuracy: 0.0% -> 50.0%
+  Reward:   0.075 -> 0.575
+  Loss:     -0.9844 -> -0.2812
