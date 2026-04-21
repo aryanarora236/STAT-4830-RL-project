@@ -20,19 +20,19 @@ Final self-critique covering the complete project arc, written after the final P
 - **Final artifacts**: BC checkpoint, RL checkpoint with 4 retrospective-selection candidates, training curves plot, structured eval JSON, Colab demo notebook.
 
 ### Headline numbers
-- Zero-shot Qwen-7B: **8.0%** action-type accuracy (25 episodes).
-- Zero-shot Qwen-1.5B: **[ZS_1_5B]%** (50 episodes).
-- BC Qwen-1.5B: **[BC_ALL]%** all streets, **[BC_PRE]%** preflop, **[BC_POST]%** postflop.
-- RL Qwen-1.5B from BC: **[RL_ALL]%** all streets, **[RL_PRE]%** preflop, **[RL_POST]%** postflop.
+- Zero-shot Qwen-7B: **8.0%** action-type accuracy (25 episodes, HF Inference API).
+- BC Qwen-1.5B: approximately **25%** batch rollout accuracy at first RL iteration from BC (proxy for held-out eval pending `--phase eval` run).
+- RL Qwen-1.5B: best EMA accuracy **42.3%** at iter 105 of the long run; single-batch peak **75%** hit repeatedly; final iter 120 EMA 28.7%.
 - Heuristic: **100%** (by construction).
-- Training time: ~90 minutes on H100 80GB.
+- Training: 10-iter medium run + 120-iter long run, batch 4, on PrimeIntellect.
+- Held-out eval numbers for BC and RL fill in from `experiments/results/final_eval_iter105.json` after running `scripts/poker_train.py --phase eval --model ./checkpoints/poker_rl_long_simple_120iters_20260420/iter_105`.
 
 ## ORIENT
 
 ### What went well
-1. **The BC warm-start turned out to be everything.** REINFORCE from a random-init small model would be hopeless on this reward sparsity. BC on 500 heuristic trajectories gave us a policy that emits structurally valid code on ~100% of rollouts from iteration 1 of RL, which is the only regime where REINFORCE is stable.
+1. **The BC warm-start turned out to be necessary but not sufficient.** REINFORCE from a random-init small model would be hopeless on this reward sparsity. BC on 500 heuristic trajectories gave us a policy that emitted structurally valid code on most rollouts *at the start of RL* — which is the only regime where REINFORCE is stable. (What the BC warm-start did *not* guarantee is that the policy would keep writing code once RL started optimizing — see the reward-hacking finding below.)
 2. **The pivot to poker (Week 9) was the right call.** The original synthetic needle/KV/aggregation tasks were trivial for the heuristic and gave the LLM nothing interesting to learn. Poker surfaces a genuine long-context signal (opponent stats) that the heuristic must use and that the LLM must learn to extract. Without the pivot the Week 14 presentation would have been "heuristic solves everything 100%, LLM solves nothing 0%, not much to see."
-3. **Stabilized REINFORCE.** Going from raw advantages to batch-mean-and-std-normalized clipped advantages (added Apr 11) eliminated the catastrophic regression we saw on April 7 (50% → 37.5% over 20 iterations). This is textbook variance reduction — the course notes call it out explicitly in §7 — but we had to hit the failure mode ourselves before we understood why.
+3. **Stabilized REINFORCE produced a visible learning curve.** Going from raw advantages to batch-mean-and-std-normalized clipped advantages (added Apr 11) turned the April 7 regression (50%→37.5%) into the April 20 ascent (25%→42.3% EMA over 105 iterations of the long run). This is textbook variance reduction — the course notes call it out explicitly in §7 — but we had to hit the failure mode ourselves before we understood why.
 4. **Reproducibility from day one.** `set_training_seed` propagates to Python, Torch, numpy, and HF SFT seeds. Given a random seed and a GPU, the full BC → RL → Eval pipeline produces bit-identical trajectories. This mattered when we wanted to isolate whether a change was due to code or noise.
 5. **Tests caught real bugs.** The confusion-matrix row/column off-by-one would have put a misleading heatmap in the final report. The BC task mix regression test prevented silently reverting the preflop/postflop diversity fix. Writing 34 unit tests across 23 poker-specific scenarios was overkill for a semester project — and saved us hours at the end when we were debugging the final run.
 
@@ -45,9 +45,12 @@ Final self-critique covering the complete project arc, written after the final P
 6. **We underestimated how much of the work was plumbing.** Agent interface, sandbox, prompt formatting, trajectory collection, sandboxed code extraction, fallback action parsing, sampling and extraction retries — all of this is *before* any learning happens. In retrospect we'd have spent Week 4–6 exclusively on this plumbing rather than splitting time with the Week 4–8 synthetic tasks.
 
 ### Surprises
+- **The central finding of the project is a negative result: the model learned to skip the REPL.** Across the 120-iteration long run, the `real_code` counter averaged 0.3 / 4 rollouts per batch — meaning roughly one in ten rollouts produced extractable Python. The rest hit the `wrapped_action_code` fallback, which just wraps a plain action string in `print(...)`. The policy discovered that the type-match reward fires ~25% of the time on any action guess, and writing a full retrieve→compute→decide program costs many tokens with high failure risk. REINFORCE followed the gradient downhill to the easy fallback. This is *exactly* the reward-hacking pattern §7 of the course notes teaches (the "avoid the letter e" example needed six reward iterations); we hit the same pathology on the first reward we tried. The remediation is to restructure the reward so tool use is mechanically required — a bonus for emitting code, an EV-based reward, or a task setup where a blind guess cannot be correct.
+- **The post-peak drift.** EMA accuracy climbs monotonically for 105 iterations, peaks at 42.3%, then decays to 28.7% by iter 120. The decay tracks `real_code` dropping further as the reward-hacking attractor dominates. Retrospective checkpoint selection (we evaluate on iter_105, not iter_120) saves the final number but not the underlying dynamic.
 - **The LLM often ignores the hand history even after BC.** Manual inspection of 20 BC rollouts shows that even when the generated code computes VPIP correctly, it sometimes discards the stats and decides from hand strength alone. This is a BC dataset artifact — 84.6% of heuristic decisions don't adjust for opponent, so the model correctly learns that the stats are *usually* irrelevant. RL nudges this but does not fix it.
 - **Small LR matters more than batch size.** We tried LR 1e-5 for RL early on and saw the model collapse to constant `fold` within 5 iterations. Dropping to 5e-6 recovered. The course notes' point about LR being a nuisance hyperparameter when you change anything else was exactly the lesson we lived.
 - **Negative REINFORCE losses are fine.** The first time we saw iteration loss drop below zero we thought something was broken. It isn't — clipped advantages can be signed, so `loss = -advantage * log_prob` can be either sign. The EMA reward is the real training signal.
+- **Batch 4 is too small.** Every episode moves raw accuracy by 25 points. We relied on EMA to read the trend, but the underlying variance almost certainly contributed to the late-run drift. Batch 16 or 32 would have produced cleaner curves — the trade-off was wall-clock time per iteration on a single GPU.
 
 ### Critical risks (recognized, some mitigated, some shipped as-is)
 - **Overfitting to the heuristic's quirks.** Mitigated: we collect rollouts on mixed-street tasks, include both all-streets and street-specific evaluation.
@@ -58,10 +61,11 @@ Final self-critique covering the complete project arc, written after the final P
 ## DECIDE
 
 ### If we had another week
-1. **Run 3 seeds of the full pipeline** to put error bars on the BC vs. RL comparison. ~5 hours of H100 time, two-sentence change to the report.
-2. **Implement EV-based reward** and retrain for 20 iterations. Most interesting scientific question — does RL still improve if the reward is not defined against the heuristic itself?
-3. **Evaluate at Qwen-7B** to see whether the improvement arc scales. If BC+RL Qwen-7B clears 90% on all streets, that's a much stronger RLM claim.
-4. **Adversarial self-play.** Train two BC-warmstarted policies against each other instead of against the heuristic. See whether the policies converge to something interesting or collapse.
+1. **Fix the reward to price tool use.** The single highest-value change: add a small bonus when `real_code=1` and penalize `wrapped_action_code`, or switch to an EV-based reward where a blind guess cannot be correct. This directly attacks the reward-hacking attractor we observed.
+2. **Increase RL batch size to 16 or 32.** Would cut per-iteration variance by 2-3× at the cost of ~4× wall-clock per iteration. With a clean curve we could confidently compare pre- and post-stabilization runs.
+3. **Run 3 seeds of the full pipeline** to put error bars on the BC → RL comparison. ~5 hours of H100 time, two-sentence change to the report.
+4. **Evaluate at Qwen-7B.** If BC+RL Qwen-7B resists the wrap-action-text attractor (plausible — larger models are less likely to collapse to a trivial strategy), the RLM claim gets substantially stronger.
+5. **Adversarial self-play.** Train two BC-warmstarted policies against each other instead of against the heuristic. See whether the policies converge to something interesting or collapse.
 
 ### What we'd skip
 - The synthetic needle/KV/aggregation tasks (Weeks 4–8). Useful for scaffolding but did not transfer to the final domain.
@@ -73,19 +77,19 @@ Final self-critique covering the complete project arc, written after the final P
 ### What shipped this week
 1. Upstream training-infra improvements (seed propagation, BC grad accum / weight decay, REINFORCE normalized clipped advantages, sampling temperature/top-p knobs, eval JSON export).
 2. PrimeIntellect bootstrap + pipeline runner scripts (`scripts/primeintellect/`).
-3. Final PrimeIntellect training run: BC + 20 RL iterations + 50-episode eval, 90 minutes wall clock.
+3. Final PrimeIntellect training run: 10-iter medium RL + 120-iter long RL, with per-iteration CSV/JSON/PNG artifacts saved to `docs/results/`.
 4. This self-critique, the final report, the final presentation slide outline, the Colab demo notebook, and a fresh project README with reproduction instructions.
-5. Structured eval JSON in `experiments/results/final_eval_*.json` so every number in the report and slides is auditable back to the run.
+5. Training-history JSON and CSV in `docs/results/poker_rl_*/` so every number in the report and slides is auditable back to the run.
 
 ### Final status
 - Code + tests on `main`: 36/36 passing, repo clean.
-- Report (`report.md`): conference-style, results tables populated from the final eval JSON.
+- Report (`report.md`): conference-style, results tables driven by the April 20 training runs with a clearly-named placeholder for the iter_105 held-out eval (one command, 15 min).
 - Self-critique (`self_critique_week15.md`): this document.
 - Presentation (`docs/final_slides_outline.md` + final `.pptx`): 18 slides.
-- Colab demo (`notebooks/final_demo.ipynb`): runs zero-shot vs. BC vs. RL vs. heuristic on 3 example scenarios.
+- Colab demo (`notebooks/final_demo.ipynb`): runs the RL checkpoint on 3 live scenarios + 30-episode eval.
 - Reproduction instructions: in `README.md` and `scripts/primeintellect/README.md`.
 
 ### Resource consumption
-- Compute: ~2 PrimeIntellect H100-hours for the final run, plus ~4 hours across prior pilots (April 7 preflop, April 10 BC smoke test, April 14 stabilized-advantage pilot).
+- Compute: ~10 PrimeIntellect hours for the April 20 medium + long runs, plus ~4 hours across prior pilots (April 7 preflop, April 10 BC smoke test, April 14 stabilized-advantage pilot).
 - Code: ~3,000 lines Python across `src/` and `scripts/`, ~1,400 lines of tests, ~900 lines of documentation.
 - Time: 15 weeks × 3 people, roughly 6–8 hours/person/week in the final three weeks.

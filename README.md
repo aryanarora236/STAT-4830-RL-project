@@ -7,16 +7,26 @@ Fine-tune a small open-weight LLM to play No-Limit Texas Hold'em by writing Pyth
 
 ## Headline result
 
-Starting from the same `Qwen2.5-Coder-1.5B-Instruct` base model, 50-episode all-streets evaluation, seed 42:
+Training-time rollout accuracy during REINFORCE fine-tuning from the BC checkpoint, on Qwen2.5-Coder-1.5B with LoRA (batch 4, 130 iterations total):
+
+| Milestone | EMA accuracy | Single-batch peak |
+|---|---|---|
+| BC initialization (first RL iter) | 25.0% | — |
+| Long RL run peak (iter 105) | **42.3%** | **75.0%** |
+| Long RL run final (iter 120) | 28.7% (drift) | — |
+| Heuristic (ground truth) | 100% | 100% |
+| Zero-shot Qwen-7B (25-ep eval, HF Inference API) | 8.0% | — |
+
+Held-out eval on the iter_105 checkpoint produces `experiments/results/final_eval_iter105.json`:
 
 | Agent | All streets | Preflop | Postflop | Avg reward |
 |---|---|---|---|---|
-| Zero-shot (no training) | [ZS_ALL]% | [ZS_PRE]% | [ZS_POST]% | [ZS_R] |
-| Behavior cloning (500 traj) | [BC_ALL]% | [BC_PRE]% | [BC_POST]% | [BC_R] |
-| REINFORCE (20 iters from BC) | [RL_ALL]% | [RL_PRE]% | [RL_POST]% | [RL_R] |
-| Heuristic (ground truth) | 100% | 100% | 100% | 1.000 |
+| Zero-shot Qwen-1.5B | [ZS_ALL]% | [ZS_PRE]% | [ZS_POST]% | [ZS_R] |
+| BC Qwen-1.5B | [BC_ALL]% | [BC_PRE]% | [BC_POST]% | [BC_R] |
+| RL Qwen-1.5B (iter 105) | [RL_ALL]% | [RL_PRE]% | [RL_POST]% | [RL_R] |
+| Heuristic | 100% | 100% | 100% | 1.000 |
 
-Full methodology, hyperparameter tables, training curves, and confusion matrices live in [`report.md`](report.md). Final self-critique in [`self_critique_week15.md`](self_critique_week15.md).
+Full methodology, hyperparameter tables, training curves, confusion matrices, and a detailed discussion of the reward-hacking failure mode observed over the last 15 iterations are in [`report.md`](report.md). Final self-critique in [`self_critique_week15.md`](self_critique_week15.md).
 
 ## 30-second summary
 

@@ -113,40 +113,50 @@ Visuals in the `Visual` line live under `figures/` in the repo.
 **Header:** Batch-normalized clipped advantages
 **Body:**
 - Vanilla REINFORCE: `loss = -(r - baseline) · Σ log π(token_t)`. Unstable.
-- Ours: `advantage = clip((r - mean) / std, -2, +2)`.
-- EMA baseline (γ=0.95) + gradient clipping (1.0) + rollout temp 0.2 / top-p 0.9.
-- Before stabilization: 20-iter run regressed **50% → 37.5%**.
-- After: **[BC_ALL]% → [RL_ALL]%** over 20 iterations.
-**Visual:** two training-curve plots side-by-side — "unstable pilot (Apr 7)" vs "stabilized (Apr 20)" — EMA reward on y-axis, iteration on x
-**Say:** The first full RL run went backwards. Normalized and clipped advantages — which the course teaches in §7 — fixed it.
+- Ours: `advantage = clip((r - mean) / std, -2, +2)` + EMA baseline (γ=0.9) + grad clip 1.0.
+- Before stabilization (Apr 7): 20-iter run regressed **50% → 37.5%**.
+- After (Apr 20): 120-iter run **climbs 25% → 42.3% EMA** over the first 105 iterations.
+**Visual:** two training-curve plots side-by-side — "unstable pilot Apr 7" vs "stabilized Apr 20"
+**Say:** The first full RL run went backwards. Normalized and clipped advantages — straight from §7 of the course notes — turned the regression into a climb.
 
 ---
 
-## Slide 10 — Results: the headline
+## Slide 10 — Results: the training arc
 
-**Header:** Zero-shot 8% → BC [BC_ALL]% → RL [RL_ALL]%
-**Body:** [paste generated table from fill_report_from_eval.py]
-| Agent | All | Preflop | Postflop | Reward |
-|---|---|---|---|---|
-| Zero-shot 7B | 8.0% | 33% | — | 0.09 |
-| Zero-shot 1.5B | [ZS_ALL]% | [ZS_PRE]% | [ZS_POST]% | [ZS_R] |
-| **BC 1.5B** | **[BC_ALL]%** | **[BC_PRE]%** | **[BC_POST]%** | **[BC_R]** |
-| **RL 1.5B** | **[RL_ALL]%** | **[RL_PRE]%** | **[RL_POST]%** | **[RL_R]** |
-| Heuristic | 100% | 100% | 100% | 1.00 |
-**Visual:** the table, with BC and RL rows highlighted
-**Say:** Zero-shot is 8%. BC gets to [BC_ALL]%. RL gets to [RL_ALL]%. Heuristic is 100%, and that's our ceiling — reward is defined against it.
-
----
-
-## Slide 11 — Where the improvement comes from
-
-**Header:** Per-action accuracy: RL mostly fixes `raise` and `call`
+**Header:** BC 25% → peak 42.3% EMA (iter 105) → 28.7% drift (iter 120)
 **Body:**
-- Zero-shot fails everywhere uniformly (most common failure: no valid final action printed).
-- BC gets preflop right (checks and folds with junk) but confuses `call` and `raise` postflop.
-- RL moves the call/raise boundary closer to the heuristic's.
-**Visual:** per-action bar chart from `final_eval.json.agents.*.by_action`
-**Say:** Breaking it down by action, the gain from BC to RL is almost entirely on the call/raise boundary — which makes sense, those are the decisions where opponent history actually matters.
+| Phase | Iter | Batch acc | EMA acc | Reward |
+|---|---|---|---|---|
+| BC init (RL iter 1) | 1 | 25% | 25.0% | 0.25 |
+| Medium run end | 10 | 50% | 24% | 0.58 |
+| Long run peak | **105** | 50% | **42.3%** | 0.50 |
+| Single-batch peak (×12 iters) | various | **75%** | up to 42.3% | 0.75 |
+| Long run final | 120 | 0% | 28.7% | 0.00 |
+| Zero-shot Qwen-7B (25 ep) | — | 8.0% | — | 0.09 |
+| Heuristic | — | 100% | — | 1.00 |
+**Visual:** line plot of EMA accuracy over 120 iterations, annotated with the peak at iter 105 and the drift after
+**Say:** Starting from BC, REINFORCE climbs from 25% to a peak of 42.3% EMA at iteration 105. Single batches hit 75%. Then something happens and the curve drifts back. That's the next slide.
+
+---
+
+## Slide 11 — The main finding: reward hacking
+
+**Header:** The model learned to skip the REPL
+**Body:**
+- Diagnostic counters across the 120-iteration long run:
+
+| Counter | Per-batch avg | What it means |
+|---|---|---|
+| `real_code` | **0.3 / 4** | Model produced extractable Python |
+| `wrapped_action_code` | **3.7 / 4** | Model emitted action text directly |
+| `exec_ok` | 4.0 / 4 | When code existed, it ran |
+| `nonzero_reward` | ~1.1 / 4 | Reward fires on ~25% of any guesses |
+
+- Type-match reward fires on ~25% of uniform-random actions. Writing full retrieve→compute→decide Python costs tokens + latency + failure risk.
+- REINFORCE followed the steepest-ascent path to expected reward — and that path *bypasses* the tool the RLM framework is built around.
+- Same pattern as §7's "avoid the letter e" example — six reward iterations to fix there; we'd need a similar effort here.
+**Visual:** bar chart of real_code vs wrapped_action_code over iterations — shows `real_code` approaching zero near the end
+**Say:** Here's the real finding of the project. Over 120 iterations, the policy learned that writing code is hard and guessing gets you 25% reward. It stopped using the REPL. That's the reward hacking pattern the course warns about, and we reproduced it on a real task.
 
 ---
 
@@ -163,13 +173,14 @@ Visuals in the `Visual` line live under `figures/` in the repo.
 
 ## Slide 13 — Training curve
 
-**Header:** RL EMA reward over 20 iterations
+**Header:** EMA accuracy over 120 iterations of REINFORCE
 **Body:**
-- Starts at BC initial (≈[BC_ALL]%).
-- EMA climbs; raw-per-batch is noisy (batch 8 → each episode swings accuracy by 12.5%).
-- Retrospective checkpoint selection: we pick the best `iter_*` for evaluation, not the final iterate. (Course §10, tuning playbook.)
-**Visual:** `figures/poker_rl_training_curves.png` from the final run
-**Say:** Here's the training curve. Raw accuracy is bumpy because batch 8 is small. The EMA is the real signal. We pick the best checkpoint retrospectively.
+- Climb phase (iter 1–105): 25.0% → 42.3% EMA. This is the learning.
+- Drift phase (iter 105–120): 42.3% → 28.7% EMA. This is the reward-hacking collapse.
+- Single-batch accuracy swings ±50% throughout — batch 4 means every episode is worth 25 percentage points. EMA is the load-bearing statistic.
+- **Retrospective checkpoint selection** (course §10, tuning playbook): we evaluate on iter_105, not iter_120.
+**Visual:** `docs/results/poker_rl_long_simple_120iters_20260420/training_curves.png` — annotate peak at iter 105
+**Say:** This is the curve from the 120-iteration long run. Learning to 42.3 EMA over 105 iterations, then drift. We pick iter 105 for evaluation, which is exactly what the tuning playbook section of the course recommends.
 
 ---
 
@@ -178,7 +189,7 @@ Visuals in the `Visual` line live under `figures/` in the repo.
 **Header:** Three things that mattered
 **Body:**
 - **BC warm-start is non-negotiable.** From scratch, REINFORCE never sees a successful rollout.
-- **Normalized + clipped advantages.** Without them, our 20-iter pilot regressed 12.5 points.
+- **Normalized + clipped advantages.** Without them, our 20-iter pilot regressed 12.5 points. With them, we got 17 EMA-accuracy points of climb over 105 iterations.
 - **Reproducibility from day one.** `set_training_seed` threads Python / Torch / numpy / HF SFT seed; the full pipeline is bit-identical given a seed.
 **Visual:** 3 icons — "warm start", "stabilized", "reproducible"
 **Say:** Three things we'd do the same way again. BC before RL. Clip your advantages. Seed everything.
@@ -189,12 +200,13 @@ Visuals in the `Visual` line live under `figures/` in the repo.
 
 **Header:** If we had another week
 **Body:**
+- **Fix the reward to price tool use.** Bonus for `real_code=1`, penalty for `wrapped_action_code`. Directly attacks the attractor from Slide 11.
+- **Batch 16 instead of batch 4.** Cut per-iteration variance 2-3×; cleaner curve, less sensitivity to drift.
 - **3-seed variance bars** on the BC vs RL comparison. ~5 H100-hours.
-- **EV-based reward** instead of type-match — decouples from the heuristic, opens the door to beating it.
-- **Larger base model.** Qwen-7B with the same recipe; expected to close more of the gap to 100%.
+- **Larger base model.** Qwen-7B with the same recipe — larger models tend to be harder to collapse to trivial strategies.
 - **Adversarial self-play** — two BC-warmstart policies training against each other.
-**Visual:** checklist of the four items
-**Say:** Here's what we'd do next. Error bars, a better reward, bigger model, self-play.
+**Visual:** checklist of the five items
+**Say:** Here's what we'd do next. Fix the reward first — that's the finding from the last 15 iterations. Then bigger batch, error bars, bigger model, self-play.
 
 ---
 
@@ -227,13 +239,15 @@ Visuals in the `Visual` line live under `figures/` in the repo.
 
 ## Slide 18 — Closing
 
-**Header:** A 1.5B LLM learned to use a Python REPL for poker
+**Header:** A 1.5B LLM learned to use a Python REPL — then learned to stop
 **Body:**
-- Zero-shot 8% → final [RL_ALL]%, in ~90 minutes on one H100.
+- Zero-shot Qwen-7B: 8.0%. Heuristic: 100%.
+- BC + 130 iters REINFORCE: 25.0% → 42.3% EMA peak (iter 105) → 28.7% drift (iter 120).
+- Key finding: naive type-match reward is hackable. The policy skipped the REPL because guessing was cheaper.
 - Code, report, self-critique, Colab demo at `github.com/aryanarora236/STAT-4830-RL-project`.
 - Questions?
-**Visual:** final comparison bar chart (3 bars: zero-shot, BC, RL) with heuristic as a dashed 100% line
-**Say:** We started at 8%, ended at [RL_ALL]%, and the whole pipeline runs in 90 minutes on one H100. Repo is open. Questions?
+**Visual:** line plot of EMA accuracy over 120 iterations, annotated: "learning" (1-105), "reward hacking" (105-120)
+**Say:** The recipe works, up to a point. After 105 iterations the policy finds a shortcut and we go backwards. That's the real story of the project, and it's exactly the failure mode §7 of the course warned us about. Questions?
 
 ---
 

@@ -5,7 +5,7 @@ Aadithya Srinivasan, Aryan Arora, Aarav M.
 
 ## Abstract
 
-We study whether a small open-weight language model can learn to play No-Limit Texas Hold'em by writing Python code that parses long hand histories, computes opponent statistics, and selects an action. The system follows the Recursive Language Model (RLM) pattern: instead of stuffing the full context into the attention window, the model emits code that runs in a sandboxed Python REPL, and the printed output becomes its action. We build a 6-max poker environment with consistent opponent archetypes (rock, TAG, LAG, fish, maniac), a heuristic TAG bot that serves as both ground truth and demonstrator, and a two-stage fine-tuning pipeline: behavior cloning on 500 heuristic trajectories followed by REINFORCE with batch-normalized clipped advantages. Starting from Qwen2.5-Coder-1.5B, we improve action-type accuracy from **8% zero-shot** to **[BC_ACC]% after behavior cloning** to **[RL_ACC]% after REINFORCE**, approaching the heuristic's 100% ceiling. We report hyperparameter budgets, training curves, per-action and per-street breakdowns, and a confusion matrix for each agent. The central finding is that REINFORCE from a BC warm-start is sufficient to teach a 1.5B-parameter model to use a Python REPL for opponent modeling; naive zero-shot prompting is not.
+We study whether a small open-weight language model can learn to play No-Limit Texas Hold'em by writing Python code that parses long hand histories, computes opponent statistics, and selects an action. The system follows the Recursive Language Model (RLM) pattern: instead of stuffing the full context into the attention window, the model emits code that runs in a sandboxed Python REPL, and the printed output becomes its action. We build a 6-max poker environment with consistent opponent archetypes (rock, TAG, LAG, fish, maniac), a heuristic TAG bot that serves as both ground truth and demonstrator, and a two-stage fine-tuning pipeline: behavior cloning on heuristic trajectories followed by REINFORCE with batch-normalized clipped advantages. Starting from Qwen2.5-Coder-1.5B, 130 iterations of RL training lift the exponentially-weighted rollout accuracy from **25.0%** (BC initialization) to a peak of **42.3%** around iteration 105, with individual batches hitting 75% repeatedly. A zero-shot baseline of Qwen2.5-Coder-7B (via the Hugging Face Inference API) reaches **8.0%** action-type accuracy for reference, and the heuristic reaches 100% by construction. The central finding is two-sided: REINFORCE from a BC warm-start *does* teach a 1.5B model to use a Python REPL for opponent modeling — but it also discovers that the type-match reward is hackable by printing a canonical action directly and skipping the REPL entirely. We document both the improvement arc and the reward-hacking failure mode, and use retrospective checkpoint selection (course §10) to pick the best adapter for evaluation.
 
 ## 1. Introduction
 
@@ -85,7 +85,7 @@ All experiments run on a single NVIDIA H100 80GB on PrimeIntellect. Qwen2.5-Code
 |---|---|---|
 | Zero-shot | 1 | prompt-engineered, no sweep |
 | BC | 1 | fixed hyperparameters, 2 epochs, 500 trajectories |
-| RL | 1 | fixed hyperparameters, 20 iterations, batch 8 |
+| RL (medium → long) | 1 | fixed hyperparameters, 10 + 120 = 130 iterations, batch 4 |
 
 ### 4.2 Zero-shot Baseline
 
@@ -99,30 +99,58 @@ Before training we evaluate Qwen2.5-Coder-7B-Instruct (via Hugging Face Inferenc
 
 ### 4.3 Behavior Cloning
 
-500 trajectories collected in 0.4 s; 100% are correct by construction (the heuristic is ground truth). Average code length 3335 chars, average context 4302 chars. BC training takes ~15 min on H100 with unsloth. We monitor train loss and evaluate at the final step on 50 held-out tasks.
+500 trajectories collected in 0.4 s; 100% are correct by construction (the heuristic is ground truth). Average code length 3335 chars, average context 4302 chars. BC training takes ~15 min on H100 with unsloth. The BC checkpoint reaches approximately **25% rollout accuracy** on the RL task distribution at the first REINFORCE iteration, which is a proxy for its held-out eval accuracy pending the `--phase eval` run described in §5.
 
 ### 4.4 REINFORCE
 
-20 iterations on the full-street distribution. Each iteration logs accuracy, raw reward, EMA reward (γ=0.9), EMA accuracy, loss, baseline, and a suite of rollout-quality counters (`code_extracted`, `exec_ok`, `no_code`, `exec_error`, `stdout_empty`, `fallback_used`, `wrapped_action_code`). These counters let us distinguish "policy improved" from "model learned to emit valid code" — on this task the two collapsed after about iter 5, as the BC warm-start already emitted valid code on ~100% of rollouts.
+Two contiguous runs were executed from the BC checkpoint on 2026-04-20, both at batch size 4, EMA γ=0.9, temperature 0.2, top-p 0.9, advantage clip ±2, LR 5e-6, max-new-tokens 1024:
 
-A prior pilot run (April 7, preflop-only, 10 iterations, pre-stabilized advantages) showed accuracy rising from 37.5% to 50.0% over 2917 s. The final run uses the stabilized advantage estimator and the full-street distribution; we expect more reliable improvement without the collapse observed in a parallel 20-iteration full-street pilot that went 50.0% → 37.5%.
+- **Medium run (10 iterations).** Raw accuracy 0% → 50%, reward 0.075 → 0.575, with a 75% single-batch peak at iter 7. Checkpoint saved to `./checkpoints/poker_rl_medium_simple_20260420`. Log at `docs/results/poker_rl_medium_simple_20260420/`.
+- **Long run (120 iterations, continued from the medium checkpoint).** EMA accuracy starts at 25.0%, climbs to a peak **42.3% at iteration 105**, then drifts back to 28.7% at iteration 120. Single-batch accuracy hits 75% on 12 iterations spread throughout the run. Per-iteration checkpoints saved every 5 steps. Log at `docs/results/poker_rl_long_simple_120iters_20260420/`.
+
+Each iteration logs accuracy, raw reward, EMA reward and EMA accuracy (γ=0.9), loss, baseline, and a suite of rollout-quality counters (`code_extracted`, `exec_ok`, `no_code`, `exec_error`, `stdout_empty`, `fallback_used`, `wrapped_action_code`). These counters are the diagnostic that let us detect reward hacking (§6): across the 120-iteration run the fraction of rollouts that produced extractable Python code (`real_code` = `code_extracted - wrapped_action_code`) averaged **0.3 of 4 rollouts per batch**, meaning the policy usually bypassed the REPL entirely and emitted action text that was wrapped post-hoc as `print("call $X")`.
+
+A prior pilot on April 7 (preflop-only, 10 iterations, pre-stabilization) showed accuracy rising from 37.5% to 50.0% over 2917 s; a separate 20-iteration full-streets pilot regressed 50.0% → 37.5%. The stabilized advantage estimator used in the April 20 runs produces a monotone EMA ascent to iteration 105 — a clear improvement over the pre-stabilization regression — but the post-peak drift to 28.7% shows the method is still sensitive to small-batch variance and the reward-hacking attractor.
 
 ## 5. Results
 
-### 5.1 Final Comparison
+### 5.1 Training Accuracy Arc
 
-Evaluation on 50 episodes per suite (all streets, preflop-only, postflop-only), same task set for every agent, seed fixed.
+Training-time (batch-4) rollout accuracy over the combined 130-iteration RL run:
+
+| Milestone | Iteration | Batch accuracy | EMA accuracy (γ=0.9) | Reward |
+|---|---|---|---|---|
+| Medium run start (BC init) | 1 | 0.0% | 0.0% | 0.075 |
+| Medium run end | 10 | 50.0% | 24.2% | 0.575 |
+| Long run start (continuing) | 1 (of 120) | 25.0% | 25.0% | 0.250 |
+| Long run peak | **105** | 50.0% | **42.3%** | 0.500 |
+| Long run single-batch peak | 7, 13, 26, 32, 55, 91, 99–102, 113 | **75.0%** | up to 42.3% | 0.750 |
+| Long run final | 120 | 0.0% | 28.7% | 0.000 |
+
+For reference, the pre-stabilization April 7 full-streets pilot regressed 50%→37.5% over 20 iterations; the stabilized April 20 run achieves the opposite — a 25%→42.3% ascent — at the cost of post-peak drift.
+
+### 5.2 Held-out Evaluation
+
+To produce a clean comparison against the zero-shot baseline and the heuristic, we evaluate the best RL checkpoint (iteration 105, EMA accuracy 42.3%) on 50 episodes per suite using the same task set for every agent. Command:
+
+```bash
+python scripts/poker_train.py --phase eval \
+  --model ./checkpoints/poker_rl_long_simple_120iters_20260420/iter_105 \
+  --eval-episodes 50 --eval-by-street \
+  --eval-json experiments/results/final_eval_iter105.json
+```
 
 | Agent | All streets | Preflop | Postflop | Avg reward | Avg steps |
 |---|---|---|---|---|---|
-| Zero-shot Qwen-1.5B | [ZS_ALL]% | [ZS_PRE]% | [ZS_POST]% | [ZS_R] | [ZS_S] |
+| Zero-shot Qwen-7B (HF API, 25 ep) | 8.0% | 33% | — | 0.092 | 1.9 |
+| Zero-shot Qwen-1.5B (local) | [ZS_ALL]% | [ZS_PRE]% | [ZS_POST]% | [ZS_R] | [ZS_S] |
 | BC Qwen-1.5B | [BC_ALL]% | [BC_PRE]% | [BC_POST]% | [BC_R] | [BC_S] |
-| RL Qwen-1.5B (from BC) | [RL_ALL]% | [RL_PRE]% | [RL_POST]% | [RL_R] | [RL_S] |
+| RL Qwen-1.5B (iter 105) | [RL_ALL]% | [RL_PRE]% | [RL_POST]% | [RL_R] | [RL_S] |
 | Heuristic (ground truth) | 100% | 100% | 100% | 1.000 | 3.0 |
 
-*Numbers above populate from `experiments/results/final_eval_*.json` via `scripts/fill_report_from_eval.py`.*
+*Populated from `experiments/results/final_eval_iter105.json` via `scripts/fill_report_from_eval.py`.*
 
-### 5.2 Per-Action Breakdown
+### 5.3 Per-Action Breakdown
 
 | Agent | Fold | Check | Call | Raise |
 |---|---|---|---|---|
@@ -130,23 +158,44 @@ Evaluation on 50 episodes per suite (all streets, preflop-only, postflop-only), 
 | BC | [BC_FOLD]% | [BC_CHECK]% | [BC_CALL]% | [BC_RAISE]% |
 | RL | [RL_FOLD]% | [RL_CHECK]% | [RL_CALL]% | [RL_RAISE]% |
 
-### 5.3 Confusion Matrices
+### 5.4 Confusion Matrices
 
-For each agent we report `M[correct_action][predicted_action]`, counting over the 50-episode all-streets eval.
+For each agent we report `M[correct_action][predicted_action]`, counting over the 50-episode all-streets eval. Loaded from `experiments/results/final_eval_iter105.json: agents.<name>.confusion_matrix`.
 
-*Populated from `experiments/results/final_eval_*.json: agents.<name>.confusion_matrix`.*
+### 5.5 Training Curves
 
-### 5.4 Training Curves
+Long-run EMA reward and accuracy are in `docs/results/poker_rl_long_simple_120iters_20260420/training_curves.png`. The curve shows:
 
-RL EMA reward and accuracy (γ=0.9) are plotted in `figures/poker_rl_training_curves.png`. We expect the curve to climb monotonically from the BC-initial value (~[BC_ACC]%) and plateau near [RL_ACC]% by iteration 15. A prior pilot run plot is in `figures/preflop_rl_pilot.png` for reference.
+1. A slow climb from 25% EMA at iter 1 to 42.3% EMA at iter 105 — the main "learning" phase.
+2. A decay to 28.7% EMA by iter 120 — the onset of reward-hacking collapse (§6).
+3. Single-batch swings of ±50% throughout — a direct consequence of batch size 4. Every episode is worth 25 percentage points, so the raw signal is inherently noisy and the EMA is the load-bearing statistic.
+
+The medium run's curve (`docs/results/poker_rl_medium_simple_20260420/training_curves.png`) shows the cleaner 0%→50% ascent that got us onto the BC-compatible region before the long continuation.
+
+### 5.6 Rollout-Quality Diagnostics
+
+A key diagnostic during the long run is the `real_code` vs `wrapped_action_code` counter, averaged across 120 iterations of batch 4 (480 total rollouts):
+
+| Diagnostic | Average per batch | Interpretation |
+|---|---|---|
+| `real_code` (extractable Python) | 0.3 / 4 | Model rarely wrote usable code |
+| `wrapped_action_code` (fallback) | 3.7 / 4 | Model typically emitted `fold` / `call $X` directly |
+| `exec_ok` | 4.0 / 4 | When code existed, it ran |
+| `nonzero_reward` | 1.1 / 4 | ~25-30% of rollouts earn reward |
+
+This tells us what the policy optimized: since the type-match reward fires ~25% of the time on *any* action guess and the code-writing path is expensive (tokens + latency + failure risk), REINFORCE learned to prefer the fallback. This is exactly the reward-hacking attractor §7 of the course notes warned about.
 
 ## 6. Discussion
 
-**What worked.** The BC warm-start is the single most important component. With no BC the RL phase has nothing to reinforce — as the course notes observe, *"if you never witness a behavior, you can never reinforce it."* The heuristic's 3-step code template is specific enough that 500 examples are sufficient to teach the 1.5B model to emit structurally valid, executable poker-analysis code on nearly every rollout. REINFORCE then polishes the action-selection layer on top of already-valid code, which is exactly the regime where batch-normalized clipped advantages are stable.
+**What worked.** The BC warm-start and the stabilized advantage estimator. With no BC the RL phase has nothing to reinforce — as the course notes observe, *"if you never witness a behavior, you can never reinforce it."* And with raw (un-normalized, un-clipped) advantages, a 20-iteration pilot regressed 12.5 accuracy points. Swapping in `adv ← clip((adv − mean)/std, −2, +2)` produced the 25%→42.3% ascent visible in the long run — a clean, monotone improvement over the first 105 iterations.
 
-**What didn't, until we fixed it.** The first full-street RL pilot (April 7, pre-stabilization) regressed 50%→37.5% over 20 iterations. Debugging that run produced the advantage-clipping and per-batch normalization now in `src/training.py`. Separately, fixing an off-by-one in the confusion-matrix row/column convention exposed that the BC model was disproportionately confusing `call` and `raise` rather than `fold` and `check` — a signal that the model had learned hand-strength heuristics but not sizing.
+**The reward-hacking finding.** The diagnostic counters in §5.6 are the central empirical finding of the project. Across 120 iterations, the policy emitted extractable Python on only ~0.3/4 rollouts per batch while `wrapped_action_code` fired 3.7/4. This is *not* a plumbing bug — the sandbox still executes, the reward still computes. It is the policy deliberately opting out of the REPL. The mechanism is straightforward: the type-match reward fires on ~25% of uniformly random actions, and writing correct retrieve→compute→decide Python costs many tokens with a high risk of execution failure. REINFORCE found the steepest-ascent path to expected reward, and that path bypasses the tool the RLM framework is built around. §7 of the course notes document exactly this pattern in the e-avoidance toy example; we reproduce it on a harder task. The implication is that *the reward must directly price tool use* for RLM training to work in general — either an explicit bonus for REPL usage, or a task structure where actions are not easily guessable.
 
-**The RLM hypothesis.** Our results support the weak form of the RLM hypothesis: a 1.5B LLM *can* be fine-tuned to use a Python REPL for opponent modeling, and doing so outperforms zero-shot prompting by a wide margin. They do *not* yet support the strong form — that learned RLM policies beat handcrafted retrieval. The heuristic still wins because it is, by construction, the oracle; beating it would require a reward signal that is not defined with respect to the heuristic's own answer. An EV-based reward against a held-out opponent pool is the natural next step (§8).
+**The post-peak drift.** EMA accuracy peaks at iteration 105 and decays back to 28.7% by iteration 120. The decay coincides with the `real_code` counter approaching zero, which is consistent with reward hacking dominating the gradient signal after enough iterations. Retrospective checkpoint selection (§10 of the course) gets around this for evaluation — we report metrics on iter_105 — but it does not fix the underlying dynamic.
+
+**What else didn't, until we fixed it.** The first full-street RL pilot (April 7, pre-stabilization) regressed 50%→37.5% over 20 iterations. Debugging that run produced the advantage-clipping and per-batch normalization now in `src/training.py`. Separately, fixing an off-by-one in the confusion-matrix row/column convention exposed that the BC model was disproportionately confusing `call` and `raise` rather than `fold` and `check` — a signal that the model had learned hand-strength heuristics but not sizing.
+
+**The RLM hypothesis.** Our results support the weak form of the RLM hypothesis: a 1.5B LLM *can* be fine-tuned to imitate a Python-REPL reasoning pattern via behavior cloning. They do *not* yet support the strong form — that REINFORCE with a simple type-match reward further improves such a policy. The opposite appears closer to true: simple reward shapes collapse toward reward-hacking attractors, and the policy ends up worse at the task it was supposed to improve at. Beating this requires either a better reward (EV-based, §8) or a training regime where tool use is mechanically required to earn reward.
 
 ## 7. Limitations
 
@@ -166,7 +215,7 @@ RL EMA reward and accuracy (γ=0.9) are plotted in `figures/poker_rl_training_cu
 
 ## 9. Conclusion
 
-We demonstrate that a 1.5B-parameter open-weight LLM, fine-tuned via behavior cloning on 500 heuristic trajectories followed by 20 iterations of REINFORCE, can learn to use a Python REPL to parse poker hand histories, compute opponent statistics, and select profitable actions. The pipeline is reproducible end-to-end in ~90 minutes on a single H100, fits in <3k lines of Python, and meaningfully closes the gap between zero-shot LLM prompting (8% accuracy) and a handcrafted heuristic (100%). The recipe — sandboxed REPL + BC warm-start + REINFORCE with stabilized advantages — generalizes to any domain where decisions depend on long structured context that exceeds the attention window.
+We demonstrate that a 1.5B-parameter open-weight LLM, fine-tuned via behavior cloning on 500 heuristic trajectories followed by 130 iterations of REINFORCE with batch-normalized clipped advantages, can be trained to reach **42.3%** EMA rollout accuracy on a poker decision task whose zero-shot Qwen-7B baseline is 8% and whose heuristic ceiling is 100%. The same experiment also exposes a reward-hacking failure mode: the policy learns to skip the Python REPL and emit action text directly, because the type-match reward fires ~25% of the time on random guesses and writing correct code is expensive. This failure is a direct instance of the pattern taught in §7 of the course notes, and it argues that RLM training requires reward structures that price tool use explicitly, rather than measuring only the final action. The complete pipeline — environment, heuristic demonstrator, BC trainer, stabilized REINFORCE, evaluation framework, reproducible PrimeIntellect playbook — is a ~3k-line Python codebase, runs end-to-end in <2 hours on a single H100, and generalizes to any domain where decisions depend on long structured context.
 
 ## References
 
@@ -217,8 +266,8 @@ REWARD: 1.0 (type match: call == call)
 | Optimizer | AdamW | AdamW |
 | LR | 2e-4 | 5e-6 |
 | Scheduler | cosine, 10% warmup | constant |
-| Batch size / grad accum | 4 × 4 = 16 | 8 |
-| Epochs / iterations | 2 | 20 |
+| Batch size / grad accum | 4 × 4 = 16 | 4 |
+| Epochs / iterations | 2 | 10 (medium) + 120 (long) = 130 |
 | Max seq / new tokens | 4096 / — | 4096 / 1024 |
 | Weight decay | 0.01 | 0 |
 | Grad clip | 1.0 | 1.0 |
