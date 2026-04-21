@@ -10,8 +10,11 @@ Tests:
 - Evaluation: framework metrics
 """
 
-import sys
+import json
 import os
+import sys
+import tempfile
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.poker.environment import (
@@ -22,7 +25,11 @@ from src.poker.heuristic import (
     HeuristicPokerBot, parse_opponent_stats, preflop_tier,
     _hand_key, postflop_strength, has_flush_draw, has_straight_draw,
 )
-from src.poker.tasks import generate_poker_task, generate_poker_task_with_trace
+from src.poker.tasks import (
+    generate_poker_task,
+    generate_poker_task_with_trace,
+    bc_agent_task_generators,
+)
 from src.poker.agents import PokerHeuristicAgent
 from src.poker.rewards import parse_action, compute_poker_reward_simple
 from src.poker.evaluation import PokerEvaluationFramework
@@ -374,3 +381,38 @@ def test_evaluation_framework():
         if true_a != pred_a
     )
     assert off_diagonal == 0, "Heuristic agent should have no off-diagonal confusion"
+
+
+def test_bc_agent_task_generators():
+    """BC mix helper should return the expected number of task sources."""
+    assert len(bc_agent_task_generators("all")) == 1
+    assert len(bc_agent_task_generators("preflop")) == 1
+    assert len(bc_agent_task_generators("postflop")) == 1
+    assert len(bc_agent_task_generators("mixed")) == 3
+    for gen in bc_agent_task_generators("mixed"):
+        ctx, q, a = gen()
+        assert "What should you do?" in q
+        assert isinstance(ctx, str) and isinstance(a, str)
+
+
+def test_evaluation_export_json_roundtrip():
+    """export_run_summary and save_results_json should produce valid JSON."""
+    agent = PokerHeuristicAgent()
+    framework = PokerEvaluationFramework(
+        agents=[agent],
+        task_generator=generate_poker_task,
+        num_episodes=5,
+    )
+    framework.run_evaluation()
+    summary = framework.export_run_summary()
+    assert "agents" in summary
+    assert "PokerHeuristicAgent" in summary["agents"]
+    assert summary["agents"]["PokerHeuristicAgent"]["total_episodes"] == 5
+
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "eval_out.json")
+        framework.save_results_json(path, meta={"note": "unit_test"})
+        with open(path, encoding="utf-8") as f:
+            loaded = json.load(f)
+    assert loaded["meta"]["note"] == "unit_test"
+    assert loaded["agents"]["PokerHeuristicAgent"]["exact_match_rate"] == 1.0
