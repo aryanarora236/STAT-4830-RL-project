@@ -416,3 +416,31 @@ def test_evaluation_export_json_roundtrip():
             loaded = json.load(f)
     assert loaded["meta"]["note"] == "unit_test"
     assert loaded["agents"]["PokerHeuristicAgent"]["exact_match_rate"] == 1.0
+
+
+def run_all_tests() -> bool:
+    """Run every test_* in this module; returns True if all pass."""
+    names = sorted(
+        n for n in globals()
+        if n.startswith("test_") and callable(globals()[n])
+    )
+    failed: list[str] = []
+    print("=" * 60)
+    print("POKER TESTS")
+    print("=" * 60)
+    for name in names:
+        try:
+            globals()[name]()
+            print(f"  PASS  {name}")
+        except Exception as e:
+            print(f"  FAIL  {name}: {e}")
+            failed.append(name)
+    print("=" * 60)
+    print(f"  {len(names) - len(failed)}/{len(names)} passed")
+    print("=" * 60)
+    return not failed
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(0 if run_all_tests() else 1)
