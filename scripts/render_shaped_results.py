@@ -106,13 +106,68 @@ def render_slide11_update(rows, outcome_label: str, outcome_reason: str, run_tag
     print(f"wrote {out_path}")
 
 
+def render_multi_figure(runs, out_path: str):
+    """Overlay multiple shaped runs + Exp B baseline."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    expB_iters = list(range(10, 101, 10))
+    expB_acc = [0.20] * len(expB_iters)
+
+    fig, ax = plt.subplots(figsize=(10, 5.5))
+    ax.plot(expB_iters, [a * 100 for a in expB_acc], "o-", color="#c0392b",
+            markersize=8, linewidth=2, label="Exp B (unshaped reward)")
+
+    colors = ["#27ae60", "#2980b9", "#8e44ad", "#f39c12"]
+    for i, (label, rows) in enumerate(runs):
+        its = [r["iteration"] for r in rows]
+        acc = [r["held_out_acc"] for r in rows]
+        ax.plot(its, [a * 100 for a in acc], "s-",
+                color=colors[i % len(colors)],
+                markersize=10, linewidth=2.5, label=label)
+
+    ax.axhline(8, color="#7f8c8d", ls="--", lw=1.2, alpha=0.7, label="zero-shot Qwen-7B = 8%")
+    ax.axhline(100, color="#2ecc71", ls="--", lw=1.2, alpha=0.4, label="heuristic ceiling = 100%")
+    ax.set_xlabel("REINFORCE iteration", fontsize=11)
+    ax.set_ylabel("held-out action-type accuracy (%)", fontsize=11)
+    ax.set_title("Held-out eval: shaped reward configurations vs Exp B", fontsize=12)
+    ax.set_ylim(-5, 110)
+    ax.grid(alpha=0.25)
+    ax.legend(loc="upper left", fontsize=9)
+    plt.tight_layout()
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"wrote {out_path}")
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--leaderboard", default=None,
                    help="Path to modal_shaped_leaderboard_*.json (auto-detect newest if omitted)")
+    p.add_argument("--all-leaderboards", action="store_true",
+                   help="Render overlay of all leaderboard_*.json files in experiments/results/")
     p.add_argument("--figure", default="figures/poker_rl_shaped_vs_expB.png")
     p.add_argument("--slide-update", default="docs/slide_11_update.md")
     args = p.parse_args()
+
+    if args.all_leaderboards:
+        paths = sorted(Path("experiments/results").glob("modal_shaped_leaderboard_*.json"))
+        if not paths:
+            raise SystemExit("no leaderboards found")
+        runs = []
+        for p in paths:
+            rows = json.loads(p.read_text())
+            tag = rows[0].get("run_tag", p.stem.split("_")[-1])
+            label = f"{tag}"
+            runs.append((label, rows))
+        Path(args.figure).parent.mkdir(parents=True, exist_ok=True)
+        render_multi_figure(runs, args.figure)
+        best = max(runs, key=lambda r: max(x["held_out_acc"] for x in r[1] if x["iteration"] > 0))
+        outcome_label, outcome_reason = classify_outcome(best[1])
+        Path(args.slide_update).parent.mkdir(parents=True, exist_ok=True)
+        render_slide11_update(best[1], outcome_label, outcome_reason, best[0], args.slide_update)
+        return
 
     if args.leaderboard:
         lb_path = Path(args.leaderboard)
