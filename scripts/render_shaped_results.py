@@ -156,9 +156,9 @@ def main():
         if not paths:
             raise SystemExit("no leaderboards found")
         runs = []
-        for p in paths:
-            rows = json.loads(p.read_text())
-            tag = rows[0].get("run_tag", p.stem.split("_")[-1])
+        for lb_file in paths:
+            rows = json.loads(lb_file.read_text())
+            tag = rows[0].get("run_tag", lb_file.stem.split("_")[-1])
             label = f"{tag}"
             runs.append((label, rows))
         Path(args.figure).parent.mkdir(parents=True, exist_ok=True)

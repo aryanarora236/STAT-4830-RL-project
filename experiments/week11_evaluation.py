@@ -8,20 +8,21 @@ Runs:
 4. Saves results to experiments/results/
 """
 
-import sys
-import os
 import json
+import os
 import random
+import re
+import sys
 import time
 from collections import Counter, defaultdict
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.poker.tasks import generate_poker_task, generate_poker_task_with_trace
 from src.poker.agents import PokerHeuristicAgent
 from src.poker.evaluation import PokerEvaluationFramework
-from src.poker.rewards import parse_action, compute_poker_reward_simple
 from src.poker.heuristic import HeuristicPokerBot, parse_opponent_stats
+from src.poker.rewards import compute_poker_reward_simple, parse_action
+from src.poker.tasks import generate_poker_task, generate_poker_task_with_trace
 from src.poker.training import collect_poker_trajectories_with_traces
 
 random.seed(42)
@@ -96,7 +97,6 @@ def run_detailed_heuristic_analysis(num_episodes=500):
 
         # Parse trace details
         if "Tier" in trace_text:
-            import re
             tier_match = re.search(r"Tier (\d)", trace_text)
             if tier_match:
                 tier_dist[int(tier_match.group(1))] += 1
