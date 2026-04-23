@@ -141,6 +141,7 @@ def train_and_eval(
     sample_top_p: float = 0.9,
     rl_lr: float = 5e-6,
     verbose_rollouts: bool = False,
+    max_new_tokens: int = 512,
 ):
     """
     Full pipeline:
@@ -193,7 +194,7 @@ def train_and_eval(
         "--rl-top-p", str(sample_top_p),
         "--rl-adv-clip", "2.0",
         "--ema-gamma", "0.9",
-        "--max-new-tokens", "512",
+        "--max-new-tokens", str(max_new_tokens),
         "--full-precision",  # bf16 on A10G, skip bitsandbytes
         "--rl-output", rl_output,
     ]
@@ -304,8 +305,9 @@ def main(
     sample_top_p: float = 0.9,
     rl_lr: float = 5e-6,
     verbose_rollouts: bool = False,
+    max_new_tokens: int = 512,
 ):
-    print(f"[local] dispatching to Modal: run_tag={run_tag}  temp={sample_temperature}  lr={rl_lr}  verbose={verbose_rollouts}")
+    print(f"[local] dispatching to Modal: run_tag={run_tag}  temp={sample_temperature}  lr={rl_lr}  max_new_tokens={max_new_tokens}  verbose={verbose_rollouts}")
     results = train_and_eval.remote(
         iterations=iterations,
         batch_size=batch_size,
@@ -318,6 +320,7 @@ def main(
         sample_top_p=sample_top_p,
         rl_lr=rl_lr,
         verbose_rollouts=verbose_rollouts,
+        max_new_tokens=max_new_tokens,
     )
 
     out_local = Path(f"experiments/results/modal_shaped_leaderboard_{run_tag}.json")
