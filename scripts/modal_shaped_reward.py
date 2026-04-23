@@ -111,6 +111,9 @@ def train_and_eval(
     eval_seed: int = 20260422,
     checkpoint_every: int = 5,
     run_tag: str = "default",
+    sample_temperature: float = 0.2,
+    sample_top_p: float = 0.9,
+    rl_lr: float = 5e-6,
 ):
     """
     Full pipeline:
@@ -157,9 +160,9 @@ def train_and_eval(
         "--seed", "20260422",
         "--rl-iterations", str(iterations),
         "--rl-batch-size", str(batch_size),
-        "--rl-lr", "5e-6",
-        "--rl-sample-temperature", "0.2",
-        "--rl-top-p", "0.9",
+        "--rl-lr", str(rl_lr),
+        "--rl-sample-temperature", str(sample_temperature),
+        "--rl-top-p", str(sample_top_p),
         "--rl-adv-clip", "2.0",
         "--ema-gamma", "0.9",
         "--max-new-tokens", "512",
@@ -269,8 +272,11 @@ def main(
     fallback_penalty: float = 0.2,
     eval_episodes: int = 20,
     run_tag: str = "default",
+    sample_temperature: float = 0.2,
+    sample_top_p: float = 0.9,
+    rl_lr: float = 5e-6,
 ):
-    print(f"[local] dispatching to Modal: run_tag={run_tag}")
+    print(f"[local] dispatching to Modal: run_tag={run_tag}  temp={sample_temperature}  lr={rl_lr}")
     results = train_and_eval.remote(
         iterations=iterations,
         batch_size=batch_size,
@@ -279,6 +285,9 @@ def main(
         fallback_penalty=fallback_penalty,
         eval_episodes=eval_episodes,
         run_tag=run_tag,
+        sample_temperature=sample_temperature,
+        sample_top_p=sample_top_p,
+        rl_lr=rl_lr,
     )
 
     out_local = Path(f"experiments/results/modal_shaped_leaderboard_{run_tag}.json")
