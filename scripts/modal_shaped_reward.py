@@ -71,33 +71,59 @@ SHAPED_REWARD_PATCHES = [
 ]
 
 
-def apply_patch(path: str, tool_bonus_real_code: float, tool_bonus_parsed_stats: float, fallback_penalty: float) -> None:
+VERBOSE_ROLLOUT_PATCH = (
+    """            pred_type, pred_amt = parse_action(predicted)
+            trajectories.append(PokerTrajectory(""",
+    """            # VERBOSE ROLLOUT LOG
+            print(f"  >> rollout {len(trajectories)+1}/{self.batch_size}  was_wrapped={was_wrapped}  parsed_stats={parsed_stats}  exec_ok={bool(exec_result.ok) if 'exec_result' in dir() else '?'}", flush=True)
+            print(f"     correct={correct_answer!r}  predicted={predicted!r}  base_r={base_reward:.2f}  shaped_r={reward:.2f}", flush=True)
+            _resp_preview = (response_text or '')[:240].replace(chr(10), ' / ')
+            print(f"     response[:240]={_resp_preview!r}", flush=True)
+            _code_preview = (code or '')[:240].replace(chr(10), ' / ')
+            print(f"     code[:240]={_code_preview!r}", flush=True)
+            pred_type, pred_amt = parse_action(predicted)
+            trajectories.append(PokerTrajectory(""",
+)
+
+
+def apply_patch(path: str, tool_bonus_real_code: float, tool_bonus_parsed_stats: float, fallback_penalty: float, verbose_rollouts: bool = False) -> None:
     """Apply the 3-point shaped reward patch with configurable coefficients."""
     with open(path, "r") as f:
         src = f.read()
 
     if "SHAPED REWARD" in src:
         print("[patch] already present, skipping")
-        return
+    else:
+        for i, (old, new) in enumerate(SHAPED_REWARD_PATCHES, 1):
+            if "{tool_bonus_real_code}" in new:
+                new = new.format(
+                    tool_bonus_real_code=tool_bonus_real_code,
+                    tool_bonus_parsed_stats=tool_bonus_parsed_stats,
+                    fallback_penalty=fallback_penalty,
+                )
+            if old not in src:
+                raise RuntimeError(f"Patch {i} insertion point not found in {path}")
+            src = src.replace(old, new, 1)
+        with open(path, "w") as f:
+            f.write(src)
+        print(
+            f"[patch] applied with tool_bonus=+{tool_bonus_real_code} (code), "
+            f"+{tool_bonus_parsed_stats} (stats), fallback_penalty=-{fallback_penalty}"
+        )
 
-    for i, (old, new) in enumerate(SHAPED_REWARD_PATCHES, 1):
-        if "{tool_bonus_real_code}" in new:
-            new = new.format(
-                tool_bonus_real_code=tool_bonus_real_code,
-                tool_bonus_parsed_stats=tool_bonus_parsed_stats,
-                fallback_penalty=fallback_penalty,
-            )
+    if verbose_rollouts:
+        with open(path, "r") as f:
+            src = f.read()
+        if "VERBOSE ROLLOUT LOG" in src:
+            print("[verbose-patch] already present, skipping")
+            return
+        old, new = VERBOSE_ROLLOUT_PATCH
         if old not in src:
-            raise RuntimeError(f"Patch {i} insertion point not found in {path}")
+            raise RuntimeError("verbose rollout patch insertion point not found")
         src = src.replace(old, new, 1)
-
-    with open(path, "w") as f:
-        f.write(src)
-
-    print(
-        f"[patch] applied with tool_bonus=+{tool_bonus_real_code} (code), "
-        f"+{tool_bonus_parsed_stats} (stats), fallback_penalty=-{fallback_penalty}"
-    )
+        with open(path, "w") as f:
+            f.write(src)
+        print("[verbose-patch] applied — each rollout will log response/code/predicted")
 
 
 @app.function(image=image, gpu="A10G", timeout=4500)
@@ -114,6 +140,7 @@ def train_and_eval(
     sample_temperature: float = 0.2,
     sample_top_p: float = 0.9,
     rl_lr: float = 5e-6,
+    verbose_rollouts: bool = False,
 ):
     """
     Full pipeline:
@@ -139,6 +166,7 @@ def train_and_eval(
         tool_bonus_real_code=tool_bonus_real_code,
         tool_bonus_parsed_stats=tool_bonus_parsed_stats,
         fallback_penalty=fallback_penalty,
+        verbose_rollouts=verbose_rollouts,
     )
 
     # 2. Copy starting checkpoint (Exp B's best_by_eval)
@@ -275,8 +303,9 @@ def main(
     sample_temperature: float = 0.2,
     sample_top_p: float = 0.9,
     rl_lr: float = 5e-6,
+    verbose_rollouts: bool = False,
 ):
-    print(f"[local] dispatching to Modal: run_tag={run_tag}  temp={sample_temperature}  lr={rl_lr}")
+    print(f"[local] dispatching to Modal: run_tag={run_tag}  temp={sample_temperature}  lr={rl_lr}  verbose={verbose_rollouts}")
     results = train_and_eval.remote(
         iterations=iterations,
         batch_size=batch_size,
@@ -288,6 +317,7 @@ def main(
         sample_temperature=sample_temperature,
         sample_top_p=sample_top_p,
         rl_lr=rl_lr,
+        verbose_rollouts=verbose_rollouts,
     )
 
     out_local = Path(f"experiments/results/modal_shaped_leaderboard_{run_tag}.json")
