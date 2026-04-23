@@ -1,0 +1,82 @@
+[
+  {
+    "iteration": 10,
+    "eval_accuracy": 0.2,
+    "eval_avg_reward": 0.2,
+    "eval_episodes": 20,
+    "train_accuracy_ema": 0.30727935274999996,
+    "train_reward_ema": 0.349910889425
+  },
+  {
+    "iteration": 20,
+    "eval_accuracy": 0.2,
+    "eval_avg_reward": 0.2,
+    "eval_episodes": 20,
+    "train_accuracy_ema": 0.3155570306168076,
+    "train_reward_ema": 0.34390513007371265
+  },
+  {
+    "iteration": 30,
+    "eval_accuracy": 0.2,
+    "eval_avg_reward": 0.2,
+    "eval_episodes": 20,
+    "train_accuracy_ema": 0.3340490686980565,
+    "train_reward_ema": 0.35082490096398966
+  },
+  {
+    "iteration": 40,
+    "eval_accuracy": 0.2,
+    "eval_avg_reward": 0.2,
+    "eval_episodes": 20,
+    "train_accuracy_ema": 0.2786779006654961,
+    "train_reward_ema": 0.30651675419136093
+  },
+  {
+    "iteration": 50,
+    "eval_accuracy": 0.2,
+    "eval_avg_reward": 0.2,
+    "eval_episodes": 20,
+    "train_accuracy_ema": 0.32877264066938794,
+    "train_reward_ema": 0.3536091754409588
+  },
+  {
+    "iteration": 60,
+    "eval_accuracy": 0.2,
+    "eval_avg_reward": 0.2,
+    "eval_episodes": 20,
+    "train_accuracy_ema": 0.26647655149616,
+    "train_reward_ema": 0.28766852384780084
+  },
+  {
+    "iteration": 70,
+    "eval_accuracy": 0.2,
+    "eval_avg_reward": 0.2,
+    "eval_episodes": 20,
+    "train_accuracy_ema": 0.28830310799890835,
+    "train_reward_ema": 0.32027532611112086
+  },
+  {
+    "iteration": 80,
+    "eval_accuracy": 0.2,
+    "eval_avg_reward": 0.2,
+    "eval_episodes": 20,
+    "train_accuracy_ema": 0.2860306646480413,
+    "train_reward_ema": 0.2971786877859445
+  },
+  {
+    "iteration": 90,
+    "eval_accuracy": 0.2,
+    "eval_avg_reward": 0.2,
+    "eval_episodes": 20,
+    "train_accuracy_ema": 0.2949393381952453,
+    "train_reward_ema": 0.3267745671806681
+  },
+  {
+    "iteration": 100,
+    "eval_accuracy": 0.2,
+    "eval_avg_reward": 0.2,
+    "eval_episodes": 20,
+    "train_accuracy_ema": 0.2626147060910445,
+    "train_reward_ema": 0.292614964073908
+  }
+]

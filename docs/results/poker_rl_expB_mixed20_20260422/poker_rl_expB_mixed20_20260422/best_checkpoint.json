@@ -1,0 +1,8 @@
+{
+  "best_iteration": 10,
+  "best_eval_accuracy": 0.2,
+  "best_eval_avg_reward": 0.2,
+  "best_checkpoint_dir": "./checkpoints/poker_rl_expB_mixed20_20260422/best_by_eval",
+  "eval_episodes": 20,
+  "eval_every": 10
+}

@@ -1,0 +1,24 @@
+{
+  "num_iterations": 100,
+  "first": {
+    "accuracy": 0.25,
+    "avg_reward": 0.325,
+    "loss": 0.68994140625
+  },
+  "last": {
+    "accuracy": 0.0,
+    "avg_reward": 0.0,
+    "loss": 0.0
+  },
+  "best_accuracy": 1.0,
+  "best_reward": 1.0,
+  "best_eval": {
+    "iteration": 10,
+    "eval_accuracy": 0.2,
+    "eval_avg_reward": 0.2
+  },
+  "paths": {
+    "history_json": "./checkpoints/poker_rl_expB_mixed20_20260422/training_history.json",
+    "history_csv": "./checkpoints/poker_rl_expB_mixed20_20260422/training_history.csv"
+  }
+}

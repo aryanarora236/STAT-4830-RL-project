@@ -1,0 +1,89 @@
+
+============================================================
+POKER PHASE 2: REINFORCE
+============================================================
+
+Loading model from: ./checkpoints/poker_rl_seed
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:   0%|          | 1/338 [00:00<00:40,  8.25it/s]/home/ubuntu/STAT-4830-RL-project/.venv/lib/python3.10/site-packages/bitsandbytes/backends/cuda/ops.py:213: FutureWarning: _check_is_size will be removed in a future PyTorch release along with guard_size_oblivious.     Use _check(i >= 0) instead.
+  torch._check_is_size(blocksize)
+Loading weights:   5%|▍         | 16/338 [00:00<00:03, 82.53it/s]Loading weights:  16%|█▌        | 53/338 [00:00<00:01, 202.50it/s]Loading weights:  28%|██▊       | 93/338 [00:00<00:00, 274.73it/s]Loading weights:  40%|███▉      | 135/338 [00:00<00:00, 317.74it/s]Loading weights:  51%|█████     | 173/338 [00:00<00:00, 330.15it/s]Loading weights:  65%|██████▍   | 219/338 [00:00<00:00, 364.72it/s]Loading weights:  76%|███████▌  | 256/338 [00:00<00:00, 364.04it/s]Loading weights:  87%|████████▋ | 293/338 [00:00<00:00, 358.53it/s]Loading weights:  99%|█████████▊| 333/338 [00:01<00:00, 370.27it/s]Loading weights: 100%|██████████| 338/338 [00:01<00:00, 317.42it/s]
+Loaded checkpoint from ./checkpoints/poker_rl_seed
+Trainable params: 4,358,144 / 892,974,592 (0.49%)
+
+--- Poker REINFORCE: 120 iters, batch=6, ema_gamma=0.9 ---
+--- Held-out eval enabled: episodes=60, eval_every=5, seed=20260421 ---
+/home/ubuntu/STAT-4830-RL-project/.venv/lib/python3.10/site-packages/bitsandbytes/backends/cuda/ops.py:468: FutureWarning: _check_is_size will be removed in a future PyTorch release along with guard_size_oblivious.     Use _check(i >= 0) instead.
+  torch._check_is_size(blocksize)
+  Iter 1/120: acc=33.3% (ema=33.3%) | reward=0.383 (ema=0.383) | loss=-7.7044 | real_code=1/6 | wrapped=5
+  Iter 2/120: acc=0.0% (ema=30.0%) | reward=0.050 (ema=0.350) | loss=-3.1641 | real_code=0/6 | wrapped=6
+  Iter 3/120: acc=16.7% (ema=28.7%) | reward=0.167 (ema=0.332) | loss=2.0716 | real_code=0/6 | wrapped=6
+  Iter 4/120: acc=50.0% (ema=30.8%) | reward=0.500 (ema=0.348) | loss=-3.4622 | real_code=0/6 | wrapped=6
+  Iter 5/120: acc=50.0% (ema=32.7%) | reward=0.500 (ema=0.364) | loss=-10.3125 | real_code=0/6 | wrapped=6
+    Checkpoint saved to ./checkpoints/poker_rl_expA_evalselect_20260421_long/iter_5
+    Eval @iter 5: acc=25.0% | reward=0.270 | episodes=60
+    New best checkpoint @iter 5 (eval_acc=25.0%, eval_reward=0.270)
+  Iter 6/120: acc=66.7% (ema=36.1%) | reward=0.667 (ema=0.394) | loss=11.0547 | real_code=0/6 | wrapped=6
+  Iter 7/120: acc=50.0% (ema=37.5%) | reward=0.500 (ema=0.405) | loss=-8.4792 | real_code=0/6 | wrapped=6
+  Iter 8/120: acc=0.0% (ema=33.8%) | reward=0.000 (ema=0.364) | loss=0.0000 | real_code=0/6 | wrapped=6
+  Iter 9/120: acc=50.0% (ema=35.4%) | reward=0.550 (ema=0.383) | loss=-2.6771 | real_code=0/6 | wrapped=6
+  Iter 10/120: acc=33.3% (ema=35.2%) | reward=0.333 (ema=0.378) | loss=-4.2708 | real_code=2/6 | wrapped=5
+    Checkpoint saved to ./checkpoints/poker_rl_expA_evalselect_20260421_long/iter_10
+    Eval @iter 10: acc=25.0% | reward=0.280 | episodes=60
+    New best checkpoint @iter 10 (eval_acc=25.0%, eval_reward=0.280)
+  Iter 11/120: acc=33.3% (ema=35.0%) | reward=0.333 (ema=0.373) | loss=-9.6960 | real_code=2/6 | wrapped=5
+  Iter 12/120: acc=33.3% (ema=34.8%) | reward=0.333 (ema=0.369) | loss=-3.0384 | real_code=0/6 | wrapped=6
+  Iter 13/120: acc=33.3% (ema=34.7%) | reward=0.333 (ema=0.366) | loss=-2.3203 | real_code=3/6 | wrapped=5
+  Iter 14/120: acc=16.7% (ema=32.9%) | reward=0.167 (ema=0.346) | loss=-2.4665 | real_code=0/6 | wrapped=6
+  Iter 15/120: acc=33.3% (ema=32.9%) | reward=0.383 (ema=0.350) | loss=4.9479 | real_code=0/6 | wrapped=6
+    Checkpoint saved to ./checkpoints/poker_rl_expA_evalselect_20260421_long/iter_15
+    Eval @iter 15: acc=23.3% | reward=0.273 | episodes=60
+  Iter 16/120: acc=33.3% (ema=33.0%) | reward=0.333 (ema=0.348) | loss=-3.4375 | real_code=0/6 | wrapped=6
+  Iter 17/120: acc=33.3% (ema=33.0%) | reward=0.383 (ema=0.351) | loss=9.9176 | real_code=0/6 | wrapped=6
+  Iter 18/120: acc=16.7% (ema=31.4%) | reward=0.167 (ema=0.333) | loss=-4.2076 | real_code=2/6 | wrapped=5
+  Iter 19/120: acc=33.3% (ema=31.6%) | reward=0.333 (ema=0.333) | loss=-2.9714 | real_code=0/6 | wrapped=6
+  Iter 20/120: acc=0.0% (ema=28.4%) | reward=0.000 (ema=0.300) | loss=0.0000 | real_code=0/6 | wrapped=6
+    Checkpoint saved to ./checkpoints/poker_rl_expA_evalselect_20260421_long/iter_20
+    Eval @iter 20: acc=23.3% | reward=0.273 | episodes=60
+  Iter 21/120: acc=16.7% (ema=27.2%) | reward=0.217 (ema=0.291) | loss=-2.3906 | real_code=0/6 | wrapped=6
+  Iter 22/120: acc=66.7% (ema=31.2%) | reward=0.667 (ema=0.329) | loss=0.3021 | real_code=0/6 | wrapped=6
+  Iter 23/120: acc=16.7% (ema=29.7%) | reward=0.167 (ema=0.313) | loss=-0.2899 | real_code=0/6 | wrapped=6
+  Iter 24/120: acc=0.0% (ema=26.8%) | reward=0.000 (ema=0.281) | loss=0.5052 | real_code=2/6 | wrapped=5
+  Iter 25/120: acc=16.7% (ema=25.7%) | reward=0.267 (ema=0.280) | loss=0.2734 | real_code=0/6 | wrapped=6
+    Checkpoint saved to ./checkpoints/poker_rl_expA_evalselect_20260421_long/iter_25
+    Eval @iter 25: acc=25.0% | reward=0.280 | episodes=60
+  Iter 26/120: acc=16.7% (ema=24.8%) | reward=0.167 (ema=0.269) | loss=0.6797 | real_code=0/6 | wrapped=6
+  Iter 27/120: acc=66.7% (ema=29.0%) | reward=0.667 (ema=0.308) | loss=-8.0208 | real_code=0/6 | wrapped=6
+  Iter 28/120: acc=16.7% (ema=27.8%) | reward=0.217 (ema=0.299) | loss=-0.8626 | real_code=0/6 | wrapped=6
+  Iter 29/120: acc=0.0% (ema=25.0%) | reward=0.000 (ema=0.269) | loss=0.0000 | real_code=0/6 | wrapped=6
+  Iter 30/120: acc=33.3% (ema=25.8%) | reward=0.333 (ema=0.276) | loss=6.6979 | real_code=0/6 | wrapped=6
+    Checkpoint saved to ./checkpoints/poker_rl_expA_evalselect_20260421_long/iter_30
+    Eval @iter 30: acc=23.3% | reward=0.273 | episodes=60
+  Iter 31/120: acc=16.7% (ema=24.9%) | reward=0.167 (ema=0.265) | loss=5.4961 | real_code=0/6 | wrapped=6
+  Iter 32/120: acc=16.7% (ema=24.1%) | reward=0.167 (ema=0.255) | loss=-5.2184 | real_code=0/6 | wrapped=6
+  Iter 33/120: acc=0.0% (ema=21.7%) | reward=0.000 (ema=0.230) | loss=0.0000 | real_code=0/6 | wrapped=6
+  Iter 34/120: acc=33.3% (ema=22.9%) | reward=0.383 (ema=0.245) | loss=2.3133 | real_code=0/6 | wrapped=6
+  Iter 35/120: acc=16.7% (ema=22.2%) | reward=0.167 (ema=0.237) | loss=22.8326 | real_code=0/6 | wrapped=6
+    Checkpoint saved to ./checkpoints/poker_rl_expA_evalselect_20260421_long/iter_35
+    Eval @iter 35: acc=25.0% | reward=0.285 | episodes=60
+    New best checkpoint @iter 35 (eval_acc=25.0%, eval_reward=0.285)
+  Iter 36/120: acc=33.3% (ema=23.3%) | reward=0.333 (ema=0.247) | loss=-0.1667 | real_code=0/6 | wrapped=6
+  Iter 37/120: acc=33.3% (ema=24.3%) | reward=0.333 (ema=0.255) | loss=4.5827 | real_code=0/6 | wrapped=6
+  Iter 38/120: acc=0.0% (ema=21.9%) | reward=0.050 (ema=0.235) | loss=-4.8542 | real_code=0/6 | wrapped=6
+  Iter 39/120: acc=16.7% (ema=21.4%) | reward=0.167 (ema=0.228) | loss=-5.1873 | real_code=0/6 | wrapped=6
+  Iter 40/120: acc=16.7% (ema=20.9%) | reward=0.267 (ema=0.232) | loss=-5.0299 | real_code=0/6 | wrapped=6
+    Checkpoint saved to ./checkpoints/poker_rl_expA_evalselect_20260421_long/iter_40
+    Eval @iter 40: acc=25.0% | reward=0.285 | episodes=60
+  Iter 41/120: acc=16.7% (ema=20.5%) | reward=0.217 (ema=0.230) | loss=-2.1820 | real_code=0/6 | wrapped=6
+  Iter 42/120: acc=16.7% (ema=20.1%) | reward=0.167 (ema=0.224) | loss=-10.0854 | real_code=0/6 | wrapped=6
+  Iter 43/120: acc=0.0% (ema=18.1%) | reward=0.050 (ema=0.207) | loss=5.8874 | real_code=0/6 | wrapped=6
+  Iter 44/120: acc=33.3% (ema=19.6%) | reward=0.433 (ema=0.229) | loss=2.1715 | real_code=2/6 | wrapped=5
+  Iter 45/120: acc=16.7% (ema=19.3%) | reward=0.167 (ema=0.223) | loss=-5.6291 | real_code=0/6 | wrapped=6
+    Checkpoint saved to ./checkpoints/poker_rl_expA_evalselect_20260421_long/iter_45
+    Eval @iter 45: acc=23.3% | reward=0.273 | episodes=60
+  Iter 46/120: acc=33.3% (ema=20.7%) | reward=0.333 (ema=0.234) | loss=-2.1003 | real_code=0/6 | wrapped=6
+  Iter 47/120: acc=0.0% (ema=18.7%) | reward=0.050 (ema=0.216) | loss=-1.6087 | real_code=0/6 | wrapped=6
+  Iter 48/120: acc=50.0% (ema=21.8%) | reward=0.550 (ema=0.249) | loss=-3.6468 | real_code=0/6 | wrapped=6
+  Iter 49/120: acc=50.0% (ema=24.6%) | reward=0.500 (ema=0.274) | loss=7.2317 | real_code=0/6 | wrapped=6
+  Iter 50/120: acc=33.3% (ema=25.5%) | reward=0.333 (ema=0.280) | loss=7.9033 | real_code=0/6 | wrapped=6
+    Checkpoint saved to ./checkpoints/poker_rl_expA_evalselect_20260421_long/iter_50
