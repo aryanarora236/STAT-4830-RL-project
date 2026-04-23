@@ -152,7 +152,8 @@ def train_and_eval(
     cmd = [
         "python", "-u", "scripts/poker_train.py",
         "--phase", "rl",
-        "--model", dst_ckpt,
+        "--rl-model", dst_ckpt,       # --phase rl reads --rl-model (not --model)
+        "--bc-output", dst_ckpt,       # belt-and-suspenders in case of fallback
         "--seed", "20260422",
         "--rl-iterations", str(iterations),
         "--rl-batch-size", str(batch_size),
