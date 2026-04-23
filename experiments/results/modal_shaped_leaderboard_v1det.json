@@ -1,0 +1,20 @@
+[
+  {
+    "iteration": 0,
+    "held_out_acc": 0.20,
+    "source": "baseline (Exp B best_by_eval, n=20 episodes)",
+    "run_tag": "v1det"
+  },
+  {
+    "iteration": 5,
+    "held_out_acc": 0.333,
+    "source": "checkpoints/poker_rl_shaped_v1det/iter_5 (n=15 episodes, seed=20260422)",
+    "run_tag": "v1det"
+  },
+  {
+    "iteration": 10,
+    "held_out_acc": 0.333,
+    "source": "checkpoints/poker_rl_shaped_v1det/iter_10 (n=15 episodes, seed=20260422)",
+    "run_tag": "v1det"
+  }
+]
