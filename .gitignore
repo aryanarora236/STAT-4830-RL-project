@@ -16,6 +16,15 @@ runs/
 *.log
 !docs/results/*.log
 
+# Model weights — never commit safetensors or bin files to git
+*.safetensors
+*.bin
+*.pt
+*.pth
+
+# Draft reports
+report_draft*.md
+
 # Local venvs created by PrimeIntellect bootstrap
 .venv/
 venv/

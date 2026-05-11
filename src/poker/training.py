@@ -10,6 +10,8 @@ Adapts the generic training infrastructure (src/training.py) for poker:
 
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional, Tuple, Callable
+import csv
+import json
 import os
 import random
 import re
@@ -423,6 +425,10 @@ class PokerReinforceTrainer:
         ema_gamma: float = 0.9,
         sample_temperature: float = 0.15,
         sample_top_p: float = 0.9,
+        action_space: str = "simple",
+        eval_every: int = 5,
+        eval_episodes: int = 40,
+        eval_seed: int = 1234,
     ):
         if not _torch_available:
             raise ImportError("PyTorch required for RL training")
@@ -440,6 +446,10 @@ class PokerReinforceTrainer:
         self.ema_gamma = ema_gamma
         self.sample_temperature = sample_temperature
         self.sample_top_p = sample_top_p
+        self.action_space = action_space
+        self.eval_every = eval_every
+        self.eval_episodes = max(0, eval_episodes)
+        self.eval_seed = eval_seed
 
         trainable_params = [p for p in model.parameters() if p.requires_grad]
         self.optimizer = torch.optim.AdamW(trainable_params, lr=learning_rate)
@@ -448,6 +458,13 @@ class PokerReinforceTrainer:
         self.reward_ema = None  # EMA of reward: avg_{i+1} = (1-gamma)*r_i + gamma*avg_i
         self.accuracy_ema = None
         self.history: List[Dict[str, float]] = []
+        self.eval_history: List[Dict[str, float]] = []
+        self.best_eval_accuracy: float = -1.0
+        self.best_eval_reward: float = -1.0
+        self.best_eval_iteration: int = 0
+        self.eval_tasks: List[Tuple[str, str, str]] = self._build_eval_tasks(
+            self.eval_episodes, self.eval_seed
+        )
 
     def _generate_code(
         self, messages: List[Dict[str, str]]
@@ -489,6 +506,13 @@ class PokerReinforceTrainer:
             return action_type
         return "fold"
 
+    def _canonicalize_action_text(self, text: str) -> str:
+        """Normalize an action string according to selected action space."""
+        action_type, amount = parse_action(text)
+        if self.action_space == "simple":
+            return action_type
+        return self._action_to_text(action_type, amount)
+
     @staticmethod
     def _extract_code_fallback(response_text: str) -> Optional[str]:
         """
@@ -529,10 +553,84 @@ class PokerReinforceTrainer:
             return candidate
         return None
 
+    def _build_eval_tasks(self, num_tasks: int, seed: int) -> List[Tuple[str, str, str]]:
+        """Create deterministic held-out tasks without perturbing global RNG."""
+        if num_tasks <= 0:
+            return []
+        old_state = random.getstate()
+        random.seed(seed)
+        tasks = [self.task_generator() for _ in range(num_tasks)]
+        random.setstate(old_state)
+        return tasks
+
     @staticmethod
     def _looks_like_action_text(text: str) -> bool:
         """Quick check for action-like text in model output."""
         return bool(re.search(r"\b(fold|check|call|raise)\b", text.lower()))
+
+    def _predict_action_for_task(self, context: str, question: str) -> str:
+        """Generate a single action prediction for held-out eval task."""
+        base_messages = format_poker_prompt(question, context)
+        if self.action_space == "simple":
+            action_format = "(fold/check/call/raise)"
+        else:
+            action_format = "(fold/check/call $X/raise $X)"
+        base_messages[-1]["content"] += (
+            "\n\nImportant output format:\n"
+            "- Return ONLY executable Python code.\n"
+            "- No markdown fences.\n"
+            "- Last printed line must be exactly one poker action "
+            f"{action_format}.\n"
+        )
+
+        messages = base_messages
+        response_text = ""
+        predicted = ""
+        for attempt_idx in range(2):
+            response_text, _ = self._generate_code(messages)
+            code = self._extract_code_fallback(response_text)
+            if code is not None:
+                exec_result = safe_execute_code(code, custom_globals={"CONTEXT": context})
+                if exec_result.ok and exec_result.stdout and exec_result.stdout.strip():
+                    predicted = exec_result.stdout.strip().splitlines()[-1].strip()
+                    break
+            if attempt_idx < 1:
+                messages = messages + [{
+                    "role": "assistant",
+                    "content": response_text,
+                }, {
+                    "role": "user",
+                    "content": (
+                        "Return only runnable Python code and print exactly one final action "
+                        f"{action_format}."
+                    ),
+                }]
+
+        if not predicted:
+            pred_type, pred_amt = parse_action(response_text)
+            predicted = self._action_to_text(pred_type, pred_amt)
+        return self._canonicalize_action_text(predicted)
+
+    def _evaluate_policy(self) -> Dict[str, float]:
+        """Evaluate current policy on fixed held-out tasks."""
+        if not self.eval_tasks:
+            return {"eval_accuracy": 0.0, "eval_avg_reward": 0.0, "eval_episodes": 0}
+        self.model.eval()
+        correct = 0
+        total_reward = 0.0
+        for context, question, correct_action_raw in self.eval_tasks:
+            pred = self._predict_action_for_task(context, question)
+            correct_action = self._canonicalize_action_text(correct_action_raw)
+            reward = compute_poker_reward_simple(pred, correct_action)
+            total_reward += reward
+            if parse_action(pred)[0] == parse_action(correct_action)[0]:
+                correct += 1
+        n = len(self.eval_tasks)
+        return {
+            "eval_accuracy": correct / n,
+            "eval_avg_reward": total_reward / n,
+            "eval_episodes": n,
+        }
 
     def _compute_log_probs(
         self, messages: List[Dict[str, str]], generated_ids: "torch.Tensor"
@@ -582,12 +680,16 @@ class PokerReinforceTrainer:
             attempted += 1
             context, question, correct_answer = self.task_generator()
             base_messages = format_poker_prompt(question, context)
+            if self.action_space == "simple":
+                action_format = "(fold/check/call/raise)"
+            else:
+                action_format = "(fold/check/call $X/raise $X)"
             base_messages[-1]["content"] += (
                 "\n\nImportant output format:\n"
                 "- Return ONLY executable Python code.\n"
                 "- No markdown fences.\n"
                 "- Last printed line must be exactly one poker action "
-                "(fold/check/call $X/raise $X).\n"
+                f"{action_format}.\n"
             )
 
             messages = base_messages
@@ -608,7 +710,9 @@ class PokerReinforceTrainer:
                     if attempt_idx == 2:
                         wrapped_action_code_count += 1
                         raw_type, raw_amt = parse_action(response_text)
-                        action_text = self._action_to_text(raw_type, raw_amt)
+                        action_text = self._canonicalize_action_text(
+                            self._action_to_text(raw_type, raw_amt)
+                        )
                         code = f'print("{action_text}")'
                     else:
                         no_code_count += 1
@@ -621,7 +725,7 @@ class PokerReinforceTrainer:
                                 "content": (
                                     "Your previous response was not executable Python code.\n"
                                     "Return only runnable Python now, ending with exactly one "
-                                    "print action line (fold/check/call $X/raise $X)."
+                                    f"print action line {action_format}."
                                 ),
                             }]
                         continue
@@ -636,7 +740,7 @@ class PokerReinforceTrainer:
                             "content": (
                                 "Your previous response was not executable Python code.\n"
                                 "Return only runnable Python now, ending with exactly one "
-                                "print action line (fold/check/call $X/raise $X)."
+                                f"print action line {action_format}."
                             ),
                         }]
                     continue
@@ -664,6 +768,7 @@ class PokerReinforceTrainer:
                 exec_ok_count += 1
                 if exec_result.stdout and exec_result.stdout.strip():
                     predicted = exec_result.stdout.strip().splitlines()[-1].strip()
+                    predicted = self._canonicalize_action_text(predicted)
                     parsed_stats = "vpip" in exec_result.stdout.lower()
                     break
 
@@ -677,7 +782,7 @@ class PokerReinforceTrainer:
                         "content": (
                             "Your code ran but did not print an action.\n"
                             "Return only runnable Python and ensure the final printed line is "
-                            "exactly one action: fold/check/call $X/raise $X."
+                            f"exactly one action: {action_format}."
                         ),
                     }]
 
@@ -687,21 +792,25 @@ class PokerReinforceTrainer:
                 pred_type, pred_amt = parse_action(response_text)
                 if pred_type == "fold" and not self._looks_like_action_text(response_text):
                     parse_failed_count += 1
-                predicted = self._action_to_text(pred_type, pred_amt)
+                predicted = self._canonicalize_action_text(
+                    self._action_to_text(pred_type, pred_amt)
+                )
 
-            reward = compute_poker_reward_simple(predicted, correct_answer)
+            correct_action = self._canonicalize_action_text(correct_answer)
+            reward = compute_poker_reward_simple(predicted, correct_action)
             if reward > 0:
                 nonzero_reward_count += 1
 
             pred_type, pred_amt = parse_action(predicted)
+            corr_type, _ = parse_action(correct_action)
             trajectories.append(PokerTrajectory(
                 context=context,
                 question=question,
-                correct_answer=correct_answer,
+                correct_answer=correct_action,
                 predicted_answer=predicted,
                 code=code,
                 reward=reward,
-                is_correct=(pred_type == parse_action(correct_answer)[0]),
+                is_correct=(pred_type == corr_type),
                 num_steps=1,
                 messages=messages,
                 action_type=pred_type,
@@ -796,6 +905,11 @@ class PokerReinforceTrainer:
     def train(self, num_iterations: int = 20) -> List[Dict[str, float]]:
         """Run multiple REINFORCE iterations."""
         print(f"\n--- Poker REINFORCE: {num_iterations} iters, batch={self.batch_size}, ema_gamma={self.ema_gamma} ---")
+        if self.eval_tasks:
+            print(
+                f"--- Held-out eval enabled: episodes={len(self.eval_tasks)}, "
+                f"eval_every={self.eval_every}, seed={self.eval_seed} ---"
+            )
 
         for i in range(num_iterations):
             stats = self.train_step()
@@ -816,6 +930,42 @@ class PokerReinforceTrainer:
                 self.tokenizer.save_pretrained(save_dir)
                 print(f"    Checkpoint saved to {save_dir}")
 
+            if self.eval_tasks and self.eval_every > 0 and (i + 1) % self.eval_every == 0:
+                eval_stats = self._evaluate_policy()
+                eval_row = {
+                    "iteration": i + 1,
+                    **eval_stats,
+                    "train_accuracy_ema": stats.get("accuracy_ema", 0.0),
+                    "train_reward_ema": stats.get("reward_ema", 0.0),
+                }
+                self.eval_history.append(eval_row)
+                print(
+                    f"    Eval @iter {i+1}: "
+                    f"acc={eval_stats['eval_accuracy']:.1%} | "
+                    f"reward={eval_stats['eval_avg_reward']:.3f} | "
+                    f"episodes={int(eval_stats['eval_episodes'])}"
+                )
+
+                improved = (
+                    eval_stats["eval_accuracy"] > self.best_eval_accuracy
+                    or (
+                        eval_stats["eval_accuracy"] == self.best_eval_accuracy
+                        and eval_stats["eval_avg_reward"] > self.best_eval_reward
+                    )
+                )
+                if improved:
+                    self.best_eval_accuracy = eval_stats["eval_accuracy"]
+                    self.best_eval_reward = eval_stats["eval_avg_reward"]
+                    self.best_eval_iteration = i + 1
+                    best_dir = os.path.join(self.output_dir, "best_by_eval")
+                    os.makedirs(best_dir, exist_ok=True)
+                    self.model.save_pretrained(best_dir)
+                    self.tokenizer.save_pretrained(best_dir)
+                    print(
+                        f"    New best checkpoint @iter {i+1} "
+                        f"(eval_acc={self.best_eval_accuracy:.1%}, eval_reward={self.best_eval_reward:.3f})"
+                    )
+
         os.makedirs(self.output_dir, exist_ok=True)
         self.model.save_pretrained(self.output_dir)
         self.tokenizer.save_pretrained(self.output_dir)
@@ -824,7 +974,7 @@ class PokerReinforceTrainer:
         return self.history
 
     def plot_training(self, save_path: Optional[str] = None):
-        """Plot EMA reward and accuracy curves."""
+        """Plot reward/accuracy/loss and execution-path diagnostics."""
         if not self.history:
             print("No training history to plot.")
             return
@@ -838,31 +988,66 @@ class PokerReinforceTrainer:
             return
 
         iters = list(range(1, len(self.history) + 1))
-        raw_rewards = [h['avg_reward'] for h in self.history]
         ema_rewards = [h['reward_ema'] for h in self.history]
         raw_accs = [h['accuracy'] for h in self.history]
         ema_accs = [h['accuracy_ema'] for h in self.history]
+        raw_losses = [h['loss'] for h in self.history]
+        real_code_ratio = [
+            max(0.0, (h.get('code_extracted', 0) - h.get('wrapped_action_code', 0)) / max(h.get('attempted', 1), 1))
+            for h in self.history
+        ]
+        wrapped_ratio = [
+            h.get('wrapped_action_code', 0) / max(h.get('attempted', 1), 1)
+            for h in self.history
+        ]
+        fallback_ratio = [
+            h.get('fallback_used', 0) / max(h.get('attempted', 1), 1)
+            for h in self.history
+        ]
 
-        fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+        fig, axes = plt.subplots(2, 2, figsize=(13, 9))
+        axes = axes.flatten()
 
-        # Reward plot
-        axes[0].plot(iters, raw_rewards, 'o-', alpha=0.3, color='#3498db', markersize=3, label='Raw (per batch)')
+        # Reward plot (EMA-focused to reduce per-batch noise)
         axes[0].plot(iters, ema_rewards, '-', color='#2c3e50', linewidth=2, label=f'EMA (gamma={self.ema_gamma})')
         axes[0].set_xlabel('Iteration')
         axes[0].set_ylabel('Reward')
-        axes[0].set_title('Reward per Batch + EMA')
+        axes[0].set_title('Reward EMA')
         axes[0].legend()
         axes[0].grid(alpha=0.3)
 
         # Accuracy plot
         axes[1].plot(iters, raw_accs, 'o-', alpha=0.3, color='#e74c3c', markersize=3, label='Raw (per batch)')
         axes[1].plot(iters, ema_accs, '-', color='#2c3e50', linewidth=2, label=f'EMA (gamma={self.ema_gamma})')
+        if self.eval_history:
+            eval_iters = [int(h["iteration"]) for h in self.eval_history]
+            eval_accs = [h["eval_accuracy"] for h in self.eval_history]
+            axes[1].plot(eval_iters, eval_accs, 's-', color='#16a085', linewidth=1.5, markersize=4, label='Held-out eval')
         axes[1].set_xlabel('Iteration')
         axes[1].set_ylabel('Accuracy')
         axes[1].set_title('Accuracy per Batch + EMA')
         axes[1].set_ylim(-0.05, 1.05)
         axes[1].legend()
         axes[1].grid(alpha=0.3)
+
+        # Loss plot
+        axes[2].plot(iters, raw_losses, 'o-', color='#8e44ad', alpha=0.8, markersize=3)
+        axes[2].axhline(0.0, color='#2c3e50', linewidth=1, alpha=0.5)
+        axes[2].set_xlabel('Iteration')
+        axes[2].set_ylabel('Loss')
+        axes[2].set_title('Policy Gradient Loss')
+        axes[2].grid(alpha=0.3)
+
+        # Execution/fallback path diagnostics
+        axes[3].plot(iters, real_code_ratio, 'o-', color='#27ae60', markersize=3, label='Real code ratio')
+        axes[3].plot(iters, wrapped_ratio, 'o-', color='#f39c12', markersize=3, label='Wrapped ratio')
+        axes[3].plot(iters, fallback_ratio, 'o-', color='#c0392b', markersize=3, label='Fallback ratio')
+        axes[3].set_xlabel('Iteration')
+        axes[3].set_ylabel('Fraction of batch')
+        axes[3].set_title('Execution Path Diagnostics')
+        axes[3].set_ylim(-0.05, 1.05)
+        axes[3].legend()
+        axes[3].grid(alpha=0.3)
 
         plt.tight_layout()
         if save_path is None:
@@ -871,3 +1056,93 @@ class PokerReinforceTrainer:
         fig.savefig(save_path, dpi=150, bbox_inches='tight')
         plt.close(fig)
         print(f"Training curves saved to {save_path}")
+
+    def save_training_analysis(self, save_dir: Optional[str] = None) -> Dict[str, Any]:
+        """Persist per-iteration history and compact summary JSON/CSV."""
+        if not self.history:
+            print("No training history to save.")
+            return {}
+
+        if save_dir is None:
+            save_dir = self.output_dir
+        os.makedirs(save_dir, exist_ok=True)
+
+        history_json = os.path.join(save_dir, "training_history.json")
+        summary_json = os.path.join(save_dir, "training_summary.json")
+        history_csv = os.path.join(save_dir, "training_history.csv")
+
+        with open(history_json, "w", encoding="utf-8") as f:
+            json.dump(self.history, f, indent=2)
+
+        fields = list(self.history[0].keys())
+        with open(history_csv, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(self.history)
+
+        first = self.history[0]
+        last = self.history[-1]
+        summary: Dict[str, Any] = {
+            "num_iterations": len(self.history),
+            "first": {
+                "accuracy": first.get("accuracy"),
+                "avg_reward": first.get("avg_reward"),
+                "loss": first.get("loss"),
+            },
+            "last": {
+                "accuracy": last.get("accuracy"),
+                "avg_reward": last.get("avg_reward"),
+                "loss": last.get("loss"),
+            },
+            "best_accuracy": max(h.get("accuracy", 0.0) for h in self.history),
+            "best_reward": max(h.get("avg_reward", 0.0) for h in self.history),
+            "best_eval": {
+                "iteration": self.best_eval_iteration,
+                "eval_accuracy": self.best_eval_accuracy if self.best_eval_accuracy >= 0 else None,
+                "eval_avg_reward": self.best_eval_reward if self.best_eval_reward >= 0 else None,
+            },
+            "paths": {
+                "history_json": history_json,
+                "history_csv": history_csv,
+            },
+        }
+
+        with open(summary_json, "w", encoding="utf-8") as f:
+            json.dump(summary, f, indent=2)
+        self.save_eval_leaderboard(save_dir)
+        print(f"Training analysis saved to {summary_json} and {history_csv}")
+        return summary
+
+    def save_eval_leaderboard(self, save_dir: Optional[str] = None) -> Dict[str, Any]:
+        """Persist held-out evaluation leaderboard."""
+        if save_dir is None:
+            save_dir = self.output_dir
+        os.makedirs(save_dir, exist_ok=True)
+
+        leaderboard_json = os.path.join(save_dir, "eval_leaderboard.json")
+        leaderboard_csv = os.path.join(save_dir, "eval_leaderboard.csv")
+        best_json = os.path.join(save_dir, "best_checkpoint.json")
+
+        if self.eval_history:
+            fields = list(self.eval_history[0].keys())
+            with open(leaderboard_csv, "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=fields)
+                writer.writeheader()
+                writer.writerows(self.eval_history)
+            with open(leaderboard_json, "w", encoding="utf-8") as f:
+                json.dump(self.eval_history, f, indent=2)
+
+        best_payload = {
+            "best_iteration": self.best_eval_iteration,
+            "best_eval_accuracy": self.best_eval_accuracy if self.best_eval_accuracy >= 0 else None,
+            "best_eval_avg_reward": self.best_eval_reward if self.best_eval_reward >= 0 else None,
+            "best_checkpoint_dir": (
+                os.path.join(self.output_dir, "best_by_eval")
+                if self.best_eval_iteration > 0 else None
+            ),
+            "eval_episodes": len(self.eval_tasks),
+            "eval_every": self.eval_every,
+        }
+        with open(best_json, "w", encoding="utf-8") as f:
+            json.dump(best_payload, f, indent=2)
+        return best_payload

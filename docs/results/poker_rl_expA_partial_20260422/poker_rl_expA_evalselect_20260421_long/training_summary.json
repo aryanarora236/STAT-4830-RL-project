@@ -1,0 +1,24 @@
+{
+  "num_iterations": 50,
+  "first": {
+    "accuracy": 0.33299999999999996,
+    "avg_reward": 0.383,
+    "loss": -7.7044
+  },
+  "last": {
+    "accuracy": 0.33299999999999996,
+    "avg_reward": 0.333,
+    "loss": 7.9033
+  },
+  "best_accuracy": 0.667,
+  "best_reward": 0.667,
+  "best_eval": {
+    "iteration": 35,
+    "eval_accuracy": 0.25,
+    "eval_avg_reward": 0.285
+  },
+  "paths": {
+    "history_json": "./training_history.json",
+    "history_csv": "./training_history.csv"
+  }
+}

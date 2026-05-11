@@ -18,6 +18,7 @@ Usage examples:
 import argparse
 import json
 import os
+import random
 import sys
 from typing import Any, Dict, Tuple
 
@@ -121,11 +122,13 @@ def run_rl(args, model=None, tokenizer=None):
     print("=" * 60)
 
     if model is None:
-        load_path = args.rl_model or args.bc_output
+        load_path = args.rl_model or args.model or args.bc_output
         print(f"\nLoading model from: {load_path}")
         model, tokenizer = load_model(
             model_id_or_path=load_path,
             load_in_4bit=not args.full_precision,
+            lora_r=args.lora_r,
+            lora_preset=args.lora_targets,
             use_unsloth=args.unsloth,
         )
 
@@ -133,6 +136,13 @@ def run_rl(args, model=None, tokenizer=None):
         rl_task_generator = generate_preflop_task
     elif args.rl_task_mode == "postflop":
         rl_task_generator = generate_postflop_task
+    elif args.rl_task_mode == "mixed":
+        postflop_ratio = min(max(args.rl_postflop_ratio, 0.0), 1.0)
+
+        def rl_task_generator():
+            if random.random() < postflop_ratio:
+                return generate_postflop_task()
+            return generate_preflop_task()
     else:
         rl_task_generator = generate_poker_task
 
@@ -150,10 +160,15 @@ def run_rl(args, model=None, tokenizer=None):
         ema_gamma=args.ema_gamma,
         sample_temperature=args.rl_sample_temperature,
         sample_top_p=args.rl_top_p,
+        action_space=args.rl_action_space,
+        eval_every=args.rl_eval_every,
+        eval_episodes=args.rl_eval_episodes,
+        eval_seed=args.rl_eval_seed,
     )
 
     history = trainer.train(num_iterations=args.rl_iterations)
     trainer.plot_training()
+    trainer.save_training_analysis()
     if history:
         first = history[0]
         last = history[-1]
@@ -294,7 +309,19 @@ def main():
     parser.add_argument("--rl-lr", type=float, default=5e-6)
     parser.add_argument("--rl-baseline-ema", type=float, default=0.95)
     parser.add_argument("--rl-adv-clip", type=float, default=2.0)
-    parser.add_argument("--rl-task-mode", choices=["all", "preflop", "postflop"], default="all")
+    parser.add_argument("--rl-task-mode", choices=["all", "preflop", "postflop", "mixed"], default="all")
+    parser.add_argument(
+        "--rl-postflop-ratio",
+        type=float,
+        default=0.2,
+        help="When rl_task_mode=mixed, probability of sampling postflop task (0.0-1.0)",
+    )
+    parser.add_argument(
+        "--rl-action-space",
+        choices=["full", "simple"],
+        default="simple",
+        help="RL target action space: full=fold/check/call $X/raise $X, simple=fold/check/call/raise",
+    )
     parser.add_argument("--ema-gamma", type=float, default=0.9, help="EMA decay for reward/accuracy tracking")
     parser.add_argument(
         "--rl-sample-temperature",
@@ -309,6 +336,24 @@ def main():
         help="Nucleus sampling top_p during poker REINFORCE rollouts",
     )
     parser.add_argument("--rl-output", default="./checkpoints/poker_rl")
+    parser.add_argument(
+        "--rl-eval-every",
+        type=int,
+        default=5,
+        help="Run held-out policy eval every N RL iterations (0 disables)",
+    )
+    parser.add_argument(
+        "--rl-eval-episodes",
+        type=int,
+        default=40,
+        help="Number of fixed held-out tasks for RL checkpoint selection",
+    )
+    parser.add_argument(
+        "--rl-eval-seed",
+        type=int,
+        default=1234,
+        help="Seed used to construct deterministic held-out RL eval tasks",
+    )
 
     # Eval
     parser.add_argument("--eval-model", default=None, help="Checkpoint to evaluate (default: RL output)")

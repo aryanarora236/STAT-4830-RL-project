@@ -1,0 +1,7 @@
+experiment,num_iterations,first_accuracy,last_accuracy,first_reward,last_reward,best_train_accuracy,best_train_reward,best_eval_iter,best_eval_accuracy,best_eval_reward,num_eval_points
+long_simple_120,120,0.25,0.0,0.25,0.0,0.75,0.75,,,,0
+medium_simple_10,10,0.0,0.5,0.075,0.575,0.75,0.75,,,,0
+smoke_graph_3,3,0.0,0.0,0.15,0.0,0.25,0.25,,,,0
+expA_partial_50,50,0.33299999999999996,0.33299999999999996,0.383,0.333,0.667,0.667,35,0.25,0.285,9
+expB_mixed20_100,100,0.25,0.0,0.325,0.0,1.0,1.0,10,0.2,0.2,10
+fast_mixed20_20,20,0.0,0.0,0.075,0.15,0.5,0.6499999999999999,10,0.4,0.45999999999999996,2

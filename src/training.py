@@ -61,6 +61,9 @@ LORA_PRESETS = {
     "attention": ["q_proj", "v_proj", "k_proj", "o_proj"],
     "mlp": ["gate_proj", "up_proj", "down_proj"],
     "mlp+head": ["gate_proj", "up_proj", "down_proj", "lm_head"],
+    "emb+mlp": ["embed_tokens", "gate_proj", "up_proj", "down_proj"],
+    "emb+head": ["embed_tokens", "lm_head"],
+    "emb+mlp+head": ["embed_tokens", "gate_proj", "up_proj", "down_proj", "lm_head"],
     "attention+mlp": ["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
     "all": ["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj", "lm_head"],
     "head": ["lm_head"],
@@ -86,8 +89,7 @@ def load_model(
 
     Args:
         lora_target_modules: Explicit list of module names.
-        lora_preset: Shorthand — one of "attention", "mlp", "mlp+head",
-                     "attention+mlp", "all", "head".  Overridden by
+        lora_preset: Shorthand key from LORA_PRESETS. Overridden by
                      lora_target_modules if both are given.
         use_unsloth: If True, use unsloth FastLanguageModel for 2-5x
                      faster training with automatic bf16 handling.
@@ -145,9 +147,9 @@ def load_model(
             trust_remote_code=True,
         )
 
-    # modules_to_save ensures lm_head is fully trainable (not low-rank)
-    # when it appears in the target list, since LoRA on a tied embedding
-    # can be tricky.  For other modules plain LoRA is fine.
+    # modules_to_save keeps lm_head fully trainable when requested.
+    # This is a stable way to adapt output projection while still using
+    # LoRA for the rest of the selected modules.
     modules_to_save = []
     lora_modules = list(lora_target_modules)
     if "lm_head" in lora_modules:
