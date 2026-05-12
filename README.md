@@ -41,6 +41,8 @@ Full methodology, hyperparameter tables, training curves, confusion matrices, an
 
 Open [`notebooks/final_demo.ipynb`](notebooks/final_demo.ipynb) in Google Colab, switch the runtime to T4 GPU, and `Run All`. This clones the repo, downloads the published RL checkpoint, runs 3 demo scenarios with full reasoning trace, and prints the final comparison table. ~5 minutes end-to-end.
 
+**§8 — Live play vs Slumbot (optional).** The final notebook section pits the loaded RL checkpoint against the real [Slumbot](https://slumbot.com) HTTP API (the 2018 ACPC HUNL champion) for 5 hands. Add `SLUMBOT_USER` / `SLUMBOT_PASS` to Colab Secrets to enable it; the cell is safely skipped if either is missing. Each decision flows through the trained code → REPL → action pipeline and is mapped to Slumbot's wire protocol (`f`, `k`, `c`, `b<amount>`). Adds ~2 minutes on a T4.
+
 ### Option B — Full training on PrimeIntellect (~90 min, ~$3–5)
 
 1. Install CLI: `curl -fsSL https://get.primeintellect.ai | sh && prime login`
@@ -69,6 +71,14 @@ python scripts/poker_train.py --phase eval \
 ```
 
 For BC and RL you need an Ampere+ GPU with ≥24 GB VRAM (A10G, A100, L40, H100).
+
+## Sister project — Range
+
+[Range](https://github.com/asrinivasan75/Range) is a sibling poker platform (FastAPI + Next.js) developed in parallel by the same author. It is **not** the deliverable for this class — that's the notebook above — but it provides useful context:
+
+- A Q-learning agent in Range ranks **#3 worldwide on the [Slumbot](https://slumbot.com) public leaderboard** at **+96.34 BB/100** over 5,000+ hands, validating that the Slumbot opponent in §8 is non-trivial. Slumbot was the 2018 ACPC heads-up no-limit champion.
+- The Slumbot HTTP client used in §8 of the notebook is ported from Range's `packages/solver/slumbot.py` (login / new_hand / act + action-string state derivation).
+- For a richer interactive demo (browser-based hand replayer, profit curves, training dashboard), clone and run Range locally — see [github.com/asrinivasan75/Range](https://github.com/asrinivasan75/Range) for setup.
 
 ## Repository layout
 
@@ -124,7 +134,9 @@ For BC and RL you need an Ampere+ GPU with ≥24 GB VRAM (A10G, A100, L40, H100)
 | Final self-critique (Week 15) | [`self_critique_week15.md`](self_critique_week15.md) |
 | Prior self-critiques | `self_critique_week{6,8,10,11}.md` |
 | Development log (15 weeks) | [`docs/development_log.md`](docs/development_log.md) |
-| Executable demo | [`notebooks/final_demo.ipynb`](notebooks/final_demo.ipynb) |
+| Executable demo (notebook) | [`notebooks/final_demo.ipynb`](notebooks/final_demo.ipynb) |
+| Live play vs Slumbot | §8 of [`notebooks/final_demo.ipynb`](notebooks/final_demo.ipynb) |
+| Sister project (extras) | [github.com/asrinivasan75/Range](https://github.com/asrinivasan75/Range) |
 | Final presentation | [`docs/final_slides_outline.md`](docs/final_slides_outline.md) + `Final Presentation/*.pptx` |
 | Training pipeline entry point | [`scripts/poker_train.py`](scripts/poker_train.py) |
 | REINFORCE implementation | [`src/poker/training.py`](src/poker/training.py) |

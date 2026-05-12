@@ -32,3 +32,6 @@ venv/
 # HF caches
 .cache/
 hf_cache/
+
+# Sister project (has its own remote at github.com/asrinivasan75/Range)
+Range/
