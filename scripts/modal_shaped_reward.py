@@ -61,8 +61,8 @@ SHAPED_REWARD_PATCHES = [
     # Note: actual shaping coefficients are injected as format-string placeholders
     # so a single Modal script can try multiple shaping configs.
     (
-        "            reward = compute_poker_reward_simple(predicted, correct_answer)\n            if reward > 0:\n                nonzero_reward_count += 1",
-        """            base_reward = compute_poker_reward_simple(predicted, correct_answer)
+        "            reward = compute_poker_reward_simple(predicted, correct_action)\n            if reward > 0:\n                nonzero_reward_count += 1",
+        """            base_reward = compute_poker_reward_simple(predicted, correct_action)
             # SHAPED REWARD: reward real code + stat parsing, penalize fallback
             tool_bonus = 0.0
             if not was_wrapped:
