@@ -24,6 +24,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 app = modal.App("stat4830-shaped-reward")
 
+# Persistent volume so trained checkpoints survive container reap.
+# Created on first run; reused thereafter.
+CHECKPOINTS_VOLUME = modal.Volume.from_name(
+    "stat4830-poker-checkpoints", create_if_missing=True,
+)
+
 # Full-precision (bf16) path — avoids bitsandbytes complications on Modal.
 # Qwen-1.5B in bf16 = ~3GB; with LoRA + backprop on A10G 24GB we have plenty.
 image = (
@@ -126,7 +132,12 @@ def apply_patch(path: str, tool_bonus_real_code: float, tool_bonus_parsed_stats:
         print("[verbose-patch] applied — each rollout will log response/code/predicted")
 
 
-@app.function(image=image, gpu="A10G", timeout=4500)
+@app.function(
+    image=image,
+    gpu="A10G",
+    timeout=4500,
+    volumes={"/persisted": CHECKPOINTS_VOLUME},
+)
 def train_and_eval(
     iterations: int = 30,
     batch_size: int = 4,
@@ -275,6 +286,26 @@ def train_and_eval(
     os.makedirs("experiments/results", exist_ok=True)
     with open(out_path, "w") as f:
         json.dump(results, f, indent=2)
+
+    # 5b. Persist checkpoints + leaderboard to the Modal Volume so they survive
+    # container teardown. Without this, all iter_* directories vanish.
+    persist_root = f"/persisted/{run_tag}"
+    os.makedirs(persist_root, exist_ok=True)
+    print(f"\n[persist] copying checkpoints to volume at {persist_root} ...")
+    if os.path.exists(rl_output):
+        dst_ckpts = f"{persist_root}/checkpoints"
+        if os.path.exists(dst_ckpts):
+            shutil.rmtree(dst_ckpts)
+        shutil.copytree(rl_output, dst_ckpts)
+        total = sum(
+            os.path.getsize(os.path.join(dirpath, f))
+            for dirpath, _, files in os.walk(dst_ckpts) for f in files
+        )
+        print(f"[persist] copied {dst_ckpts}  ({total / 1e6:.1f} MB)")
+    shutil.copy(out_path, f"{persist_root}/leaderboard.json")
+    CHECKPOINTS_VOLUME.commit()
+    print(f"[persist] volume committed. retrieve later with:")
+    print(f"  modal volume get stat4830-poker-checkpoints {run_tag} ./downloaded_{run_tag}")
 
     # Print final table
     print("\n" + "=" * 66)
