@@ -471,6 +471,40 @@ The Range sister project's Q-learning agent sits at +96.34~BB/100 on
 Slumbot's leaderboard (\#3 worldwide), confirming Slumbot is a
 non-trivial opponent.
 
+\textbf{Recorded session (strength-based heuristic, 50 hands).}
+To produce a concrete lower-bound baseline, we ran 50 live hands against
+Slumbot using a hand-strength heuristic agent
+(no LLM inference; script at
+\texttt{scripts/run\_slumbot\_session.py}).
+Results are summarised in \Cref{tab:slumbot}.
+
+\begin{table}[h]
+  \caption{Heuristic agent vs.\ Slumbot (50 hands, 2026-05-13).}
+  \label{tab:slumbot}
+  \vskip 0.05in
+  \begin{center}\small
+  \begin{tabular}{@{}lc@{}}
+    \toprule
+    Metric & Value \\
+    \midrule
+    Hands played     & 50 \\
+    Total            & $-36.5$ bb \\
+    Rate             & $-73.0$ bb/100 \\
+    Hand win rate    & 8/50 (16\%) \\
+    Max win          & $+36.0$ bb \\
+    Max loss         & $-36.0$ bb \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+\end{table}
+
+The $-73$~bb/100 figure is expected: Slumbot plays near-GTO and a
+flat heuristic is far from optimal.
+This result establishes a lower bound that a properly trained RL agent
+should comfortably exceed.
+Plots of the cumulative P/L, EMA, and outcome distribution are
+saved in \texttt{docs/results/slumbot\_session\_20260513/}.
+
 \textbf{Parallel development.}
 Slumbot was developed concurrently with the RLM component.
 Integration required a unified action-space bridge and a context-format
