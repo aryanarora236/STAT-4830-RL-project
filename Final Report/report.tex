@@ -259,22 +259,20 @@ timeout, only \texttt{CONTEXT} injected as a global.
 \subsection{Phase 1 — Behavior Cloning}
 
 We collect 500 heuristic trajectories (mixed preflop/postflop) and
-fine-tune Qwen2.5-Coder-1.5B with LoRA and 4-bit NF4 quantization
-using \texttt{trl.SFTTrainer}.
-Key hyperparameters: LR $2\times10^{-4}$, cosine schedule with 10\%
-warmup, batch $4\times4{=}16$, 2 epochs, max-length 4096.
-At 2048 we truncated 46\% of examples, which motivated the longer
-context window.
-BC training takes $\approx$15 minutes on an H100.
+fine-tune Qwen2.5-Coder-1.5B with LoRA ($r{=}16$) and 4-bit NF4
+quantization using \texttt{trl.SFTTrainer} for 2 epochs.
+BC establishes the retrieve $\to$ compute $\to$ decide behavior that RL
+then reinforces; without it, RL has no structured target to exploit.
+Full hyperparameters are in \Cref{sec:hparams}.
 
 \subsection{Phase 2 — REINFORCE}
 
 Starting from the BC checkpoint, each RL iteration samples a batch of
-rollouts at temperature 0.2 / top-p 0.9, executes each in the sandbox,
-computes type-match reward, forms normalized clipped advantages
-(\cref{eq:adv}), and updates with AdamW at LR $5\times10^{-6}$.
-Checkpoints are saved every 5 iterations; best-by-held-out is selected
-post-hoc.
+4 rollouts, executes each in the sandbox, computes the shaped reward
+(\cref{eq:reward}), forms normalized clipped advantages (\cref{eq:adv}),
+and updates the LoRA weights.
+Checkpoints are saved every 5 iterations; the best-by-held-out checkpoint
+is selected post-hoc to handle training instability.
 
 \subsection{Reward Function}
 
@@ -366,15 +364,15 @@ REINFORCE found the cheaper path: emit a plausible action token and let
 the sandbox \emph{fallback wrapper} turn it into \texttt{print("fold")}.
 The bypass trace below is representative:
 
-\begin{lstlisting}[caption={Reward-hacking rollout: model emits text, not code.}]
+\begin{lstlisting}[caption={Sample 1 — The shortcut (reward hack): model emits bare text, earns code bonus without any reasoning.}]
 # Model output (no code fence):
 fold
 
 # Sandbox fallback wraps it:
 print("fold")
 
-# result: real_code=False, wrapped=True
-# reward = 0.0  (wrong guess)
+# real_code=False, wrapped=True
+# reward = 0.0  (wrong guess this time; fires ~25% randomly)
 \end{lstlisting}
 
 \subsection{Stage 4 — Shaped Reward Fix}
@@ -430,20 +428,10 @@ iterates toward genuinely runnable opponent-modeling code.
 
 \subsection{Summary Across Experiments}
 
-\Cref{fig:heldout} shows held-out accuracy across all experiments with
-explicit evaluation checkpoints.
-
-\begin{figure}[t]
-  \vskip 0.1in
-  \begin{center}
-    \centerline{\includegraphics[width=\columnwidth]{docs/results/analysis_all_experiments_20260423/heldout_eval_accuracy_over_time.png}}
-    \caption{Held-out evaluation accuracy per checkpoint.
-      Exp~A and~B plateau at 20–25\%; the shaped-reward run
-      consistently reaches 33.3\%.}
-    \label{fig:heldout}
-  \end{center}
-  \vskip -0.15in
-\end{figure}
+\Cref{fig:comparison} (§\ref{sec:results}) directly compares the best
+held-out checkpoint from each experiment.
+The shaped-reward run achieves the highest accuracy of any RL variant
+and is the only configuration where real code usage exceeds 50\%.
 
 % ── 6. Slumbot Integration ──────────────────────────────────────────────────────
 \section{Slumbot Integration}
@@ -512,7 +500,7 @@ should comfortably exceed.
            Bottom-right: outcome distribution.}
   \label{fig:slumbot}
   \vskip 0.05in
-  \centerline{\includegraphics[width=\columnwidth]{../docs/results/slumbot_session_20260513/slumbot_performance.png}}
+  \centerline{\includegraphics[width=\columnwidth]{docs/results/slumbot_session_20260513/slumbot_performance.png}}
 \end{figure}
 
 \textbf{Parallel development.}
@@ -523,6 +511,7 @@ adapter, both in \texttt{src/poker/slumbot.py} and exercised in
 
 % ── 7. Results ──────────────────────────────────────────────────────────────────
 \section{Results}
+\label{sec:results}
 
 \Cref{tab:main} summarizes all agents evaluated on the same held-out
 task set (seed 20260422, 15–25 episodes per agent).
@@ -636,6 +625,11 @@ are available at:
 \begin{center}
 \small\url{https://github.com/aryanarora236/STAT-4830-RL-project}
 \end{center}
+An interactive project overview with demo traces, training curves, and
+Slumbot results is hosted at:
+\begin{center}
+\small\url{https://aryanarora236.github.io/STAT-4830-RL-project}
+\end{center}
 
 % ── References ──────────────────────────────────────────────────────────────────
 \bibliography{references}
@@ -647,6 +641,7 @@ are available at:
 \onecolumn
 
 \section{Hyperparameter Table}
+\label{sec:hparams}
 
 \begin{center}
 \small
