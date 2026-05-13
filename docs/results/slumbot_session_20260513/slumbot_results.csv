@@ -1,0 +1,51 @@
+hand,winnings_bb,position,hole,board,turns,result
+1,-1.0,BB,Qs 3c,,1,loss
+2,-36.0,BTN,8s 8c,Ah 7s 5s Th Qs,5,loss
+3,36.0,BB,Qc 8s,Ah Ac 5h 8d 3s,7,win
+4,-0.5,BTN,Jd 4s,,1,loss
+5,-1.0,BB,Jc 2d,,1,loss
+6,2.0,BTN,As Jh,8h 3d 2c Jd 9s,4,win
+7,0.5,BB,Ah Jc,,0,slumbot_fold_preflop
+8,-0.5,BTN,Qh 3s,,1,loss
+9,-1.0,BB,9h 2d,,1,loss
+10,-0.5,BTN,8c 6d,,1,loss
+11,-2.0,BB,Th 8s,Kc Js 3d,3,loss
+12,-0.5,BTN,Kd 7c,,1,loss
+13,-1.0,BB,5h 2h,,1,loss
+14,-0.5,BTN,As 7c,,1,loss
+15,-1.0,BB,Qd 5d,,1,loss
+16,-0.5,BTN,4s 2s,,1,loss
+17,-1.0,BB,8c 2c,,1,loss
+18,-0.5,BTN,Ks 6d,,1,loss
+19,-1.0,BB,8s 2s,,1,loss
+20,-0.5,BTN,7c 5s,,1,loss
+21,-4.0,BB,7h 7c,Qh Qd 4s 8s 2s,5,loss
+22,-0.5,BTN,4c 2s,,1,loss
+23,2.0,BB,Qs Qd,,1,win
+24,-0.5,BTN,Jh 2h,,1,loss
+25,-1.0,BB,8s 7h,,1,loss
+26,-0.5,BTN,9h 6d,,1,loss
+27,4.0,BB,As Jd,Qd Jh 8s Kd Tc,4,win
+28,-2.0,BTN,Qs Js,9h 6h 2h Th 2c,4,loss
+29,-24.0,BB,Kh 8h,Qs 8s 6d Qh 4d,7,loss
+30,-0.5,BTN,8d 7h,,1,loss
+31,-1.0,BB,Ad 7c,,1,loss
+32,-1.0,BTN,Ad 9s,Jh 5h 2d Tc Jc,4,loss
+33,0.0,BB,4h 4c,9d 8d 6d 5s 7s,6,chop
+34,-0.5,BTN,8h 3s,,1,loss
+35,-1.0,BB,9c 2s,,1,loss
+36,-0.5,BTN,8h 6c,,1,loss
+37,-1.0,BB,Jh 3h,,1,loss
+38,-0.5,BTN,7c 3c,,1,loss
+39,0.5,BB,6c 5s,,0,slumbot_fold_preflop
+40,-0.5,BTN,Th 3c,,1,loss
+41,-1.0,BB,6h 3h,,1,loss
+42,-0.5,BTN,Kd 4d,,1,loss
+43,-2.0,BB,Js 9s,5c 4h 3c,3,loss
+44,-0.5,BTN,Jc 5c,,1,loss
+45,-1.0,BB,9c 6s,,1,loss
+46,12.0,BTN,2s 2d,Tc 4d 3c 2c,4,win
+47,-1.0,BB,Kh 2s,,1,loss
+48,-0.5,BTN,8d 5h,,1,loss
+49,-1.0,BB,4s 2c,,1,loss
+50,2.0,BTN,Kc Ts,Ks Qh 7c 2d As,4,win

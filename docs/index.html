@@ -551,6 +551,44 @@ Python code  →  sandboxed REPL
       at $50/$100 — a significant distribution shift. This section is a
       <em>system integration demonstration</em>, not a performance claim.
     </p>
+    <h3 style="margin-top:1.6rem; font-size:1rem; color:var(--fg)">Recorded session — 50 hands (heuristic agent, 2026-05-13)</h3>
+    <p>
+      We ran a 50-hand session using a strength-based heuristic agent
+      (no LLM inference required). Results are stored in
+      <code>docs/results/slumbot_session_20260513/</code>.
+    </p>
+
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin:1rem 0 1.4rem;">
+      <div class="stat-card"><div class="stat-num">−36.5 bb</div><div class="stat-label">Total (50 hands)</div></div>
+      <div class="stat-card"><div class="stat-num">−73 bb/100</div><div class="stat-label">Win rate (near-GTO opp)</div></div>
+      <div class="stat-card"><div class="stat-num">16%</div><div class="stat-label">Hand win rate (8/50)</div></div>
+    </div>
+
+    <div class="fig-grid" style="grid-template-columns:1fr 1fr; gap:1rem;">
+      <figure style="margin:0">
+        <img src="results/slumbot_session_20260513/slumbot_performance.png"
+             alt="Slumbot 50-hand performance charts"
+             style="width:100%; border-radius:6px; border:1px solid var(--border)">
+        <figcaption style="font-size:0.78rem; color:var(--muted); margin-top:4px">
+          Cumulative P/L, per-hand results, EMA, and outcome breakdown over 50 hands.
+        </figcaption>
+      </figure>
+      <figure style="margin:0">
+        <img src="results/slumbot_session_20260513/slumbot_by_position.png"
+             alt="Win/loss by position vs Slumbot"
+             style="width:100%; border-radius:6px; border:1px solid var(--border)">
+        <figcaption style="font-size:0.78rem; color:var(--muted); margin-top:4px">
+          Win/loss breakdown by position (BB vs BTN).
+        </figcaption>
+      </figure>
+    </div>
+
+    <p style="font-size:0.85rem; color:var(--muted); margin-top:0.5rem">
+      −73 bb/100 is expected: Slumbot plays near-GTO, and a flat strength heuristic
+      is far from optimal. The result establishes a <em>lower-bound baseline</em>
+      that a properly trained RL agent should beat. The full RLM pipeline (Section 8 of
+      the Colab) lets you run the actual RL checkpoint against Slumbot with API credentials.
+    </p>
     <p>
       Run the live Slumbot demo yourself in the Colab notebook (Section 8),
       adding <code>SLUMBOT_USER</code> and <code>SLUMBOT_PASS</code>
