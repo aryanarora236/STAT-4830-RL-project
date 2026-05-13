@@ -41,7 +41,9 @@ Full methodology, hyperparameter tables, training curves, confusion matrices, an
 
 Open [`notebooks/final_demo.ipynb`](notebooks/final_demo.ipynb) in Google Colab, switch the runtime to T4 GPU, and `Run All`. This clones the repo, downloads the published RL checkpoint, runs 3 demo scenarios with full reasoning trace, and prints the final comparison table. ~5 minutes end-to-end.
 
-**§8 — Live play vs Slumbot (optional).** The final notebook section pits the loaded RL checkpoint against the real [Slumbot](https://slumbot.com) HTTP API (the 2018 ACPC HUNL champion) for 5 hands. Add `SLUMBOT_USER` / `SLUMBOT_PASS` to Colab Secrets to enable it; the cell is safely skipped if either is missing. Each decision flows through the trained code → REPL → action pipeline and is mapped to Slumbot's wire protocol (`f`, `k`, `c`, `b<amount>`). Adds ~2 minutes on a T4.
+**§4.2 — Visual demo.** A matplotlib poker-table renderer (`render_hand_state`) is wired in so each decision shows up as a slide-ready figure (cards rendered as red ♥♦ / black ♣♠ boxes, pot box, action history, heuristic-agreement badge in green or red). The cell runs the loaded model on three fresh tasks, displays the figures inline, and saves them to `figures/rlm_demo_*.png`. Three pre-generated samples are committed at `figures/render_demo_{1_preflop, 2_flop, 3_river}.png` for immediate slide use.
+
+**§8 — Live play vs Slumbot (optional).** The final notebook section pits the loaded RL checkpoint against the real [Slumbot](https://slumbot.com) HTTP API (the 2018 ACPC HUNL champion) for 5 hands. Add `SLUMBOT_USER` / `SLUMBOT_PASS` to Colab Secrets to enable it; the cell is safely skipped if either is missing. Each decision flows through the trained code → REPL → action pipeline and is mapped to Slumbot's wire protocol (`f`, `k`, `c`, `b<amount>`). The same `render_hand_state` renderer also produces a figure for the captured turn. Adds ~2 minutes on a T4.
 
 ### Option B — Full training on PrimeIntellect (~90 min, ~$3–5)
 
@@ -136,6 +138,7 @@ For BC and RL you need an Ampere+ GPU with ≥24 GB VRAM (A10G, A100, L40, H100)
 | Development log (15 weeks) | [`docs/development_log.md`](docs/development_log.md) |
 | Executable demo (notebook) | [`notebooks/final_demo.ipynb`](notebooks/final_demo.ipynb) |
 | Live play vs Slumbot | §8 of [`notebooks/final_demo.ipynb`](notebooks/final_demo.ipynb) |
+| Visual hand renders (slide-ready) | `figures/render_demo_*.png` + §4.2 of the notebook |
 | Sister project (extras) | [github.com/asrinivasan75/Range](https://github.com/asrinivasan75/Range) |
 | Final presentation | [`docs/final_slides_outline.md`](docs/final_slides_outline.md) + `Final Presentation/*.pptx` |
 | Training pipeline entry point | [`scripts/poker_train.py`](scripts/poker_train.py) |
