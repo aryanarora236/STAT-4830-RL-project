@@ -15,6 +15,8 @@
 \usepackage{xcolor}
 \usepackage{enumitem}
 \usepackage{listings}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
 \usepackage[capitalize,noabbrev]{cleveref}
 
 % ── Code listings ───────────────────────────────────────────────────────────────
@@ -71,7 +73,7 @@
   \vskip 0.3in
 ]
 
-\printAffiliationsAndNotice{}
+\printAffiliationsAndNotice{}  % renders affiliation block under author names
 
 % ── Abstract ───────────────────────────────────────────────────────────────────
 \begin{abstract}
@@ -429,7 +431,7 @@ iterates toward genuinely runnable opponent-modeling code.
 
 \subsection{Summary Across Experiments}
 
-\Cref{fig:comparison} (§\ref{sec:results}) directly compares the best
+\Cref{fig:comparison} (Section~\ref{sec:results}) directly compares the best
 held-out checkpoint from each experiment.
 The shaped-reward run achieves the highest accuracy of any RL variant
 and is the only configuration where real code usage exceeds 50\%.
