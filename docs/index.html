@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RLMs & Slumbot for Poker — STAT 4830</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --border: #2a2d3e;
+      --accent: #5b8dee;
+      --accent2: #34c98a;
+      --warn: #e85c5c;
+      --text: #e2e4f0;
+      --muted: #8b8fa8;
+      --code-bg: #12151f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,17,23,0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; gap: 2rem; height: 52px;
+    }
+    nav .logo { font-weight: 700; font-size: 1rem; color: var(--accent); }
+    nav a { color: var(--muted); text-decoration: none; font-size: 0.85rem; transition: color .2s; }
+    nav a:hover { color: var(--text); }
+    nav .spacer { flex: 1; }
+    nav .btn {
+      background: var(--accent); color: #fff; padding: 5px 14px;
+      border-radius: 6px; font-size: 0.8rem; font-weight: 600;
+      text-decoration: none; transition: opacity .2s;
+    }
+    nav .btn:hover { opacity: .85; }
+
+    /* ── Layout ── */
+    .container { max-width: 960px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 5rem 0 3.5rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero .tag {
+      display: inline-block;
+      background: rgba(91,141,238,.15); color: var(--accent);
+      border: 1px solid rgba(91,141,238,.3);
+      border-radius: 20px; padding: 3px 12px; font-size: 0.75rem;
+      font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+      margin-bottom: 1.2rem;
+    }
+    .hero h1 {
+      font-size: 2.4rem; font-weight: 800; line-height: 1.2;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #fff 40%, var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      color: var(--muted); font-size: 1.05rem; max-width: 640px;
+      margin: 0 auto 2rem;
+    }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .hero-btns a {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 22px; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 600; text-decoration: none;
+      transition: transform .15s, opacity .15s;
+    }
+    .hero-btns a:hover { transform: translateY(-1px); opacity: .9; }
+    .hero-btns .primary { background: var(--accent); color: #fff; }
+    .hero-btns .secondary {
+      background: var(--surface); color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Stat cards ── */
+    .stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+      gap: 1rem; padding: 3rem 0;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem 1rem; text-align: center;
+    }
+    .stat-card .val {
+      font-size: 2rem; font-weight: 800; color: var(--accent2);
+      line-height: 1.1;
+    }
+    .stat-card .val.warn { color: var(--warn); }
+    .stat-card .label { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── Sections ── */
+    section { padding: 3.5rem 0; border-bottom: 1px solid var(--border); }
+    section:last-of-type { border-bottom: none; }
+    h2 {
+      font-size: 1.5rem; font-weight: 700; margin-bottom: 1.4rem;
+      display: flex; align-items: center; gap: 10px;
+    }
+    h2 .num {
+      background: rgba(91,141,238,.15); color: var(--accent);
+      border-radius: 6px; padding: 1px 9px; font-size: 0.8rem; font-weight: 700;
+    }
+    h3 { font-size: 1.05rem; font-weight: 700; margin: 1.6rem 0 0.6rem; color: var(--text); }
+    p { color: var(--muted); margin-bottom: 0.75rem; }
+
+    /* ── Pipeline diagram ── */
+    .pipeline {
+      display: flex; align-items: center; justify-content: center;
+      flex-wrap: wrap; gap: 0; margin: 2rem 0;
+    }
+    .pipe-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.8rem 1.2rem; text-align: center;
+      font-size: 0.85rem; min-width: 140px;
+    }
+    .pipe-box .title { font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .pipe-box .sub { font-size: 0.75rem; color: var(--muted); }
+    .pipe-arrow {
+      color: var(--accent); font-size: 1.4rem; padding: 0 0.5rem;
+      flex-shrink: 0;
+    }
+    .pipe-box.highlight { border-color: var(--accent); background: rgba(91,141,238,.08); }
+
+    /* ── Code blocks ── */
+    .code-wrap {
+      background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden; margin: 1rem 0;
+    }
+    .code-header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 7px 14px; font-size: 0.75rem; color: var(--muted);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .code-header .dot { width:10px; height:10px; border-radius:50%; }
+    .code-header .dot.r { background:#e85c5c; }
+    .code-header .dot.y { background:#f0c040; }
+    .code-header .dot.g { background:#34c98a; }
+    .code-header .filename { margin-left: auto; opacity: .6; }
+    pre {
+      padding: 1.1rem 1.3rem; overflow-x: auto;
+      font-family: "JetBrains Mono", "Fira Code", "Courier New", monospace;
+      font-size: 0.82rem; line-height: 1.55;
+    }
+    .kw  { color: #5b8dee; font-weight: 600; }
+    .cm  { color: #5c6680; font-style: italic; }
+    .st  { color: #34c98a; }
+    .fn  { color: #c99aff; }
+    .nu  { color: #f0c040; }
+    .ok  { color: #34c98a; font-weight: 600; }
+    .bad { color: #e85c5c; font-weight: 600; }
+
+    /* ── Two-col traces ── */
+    .traces { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+    @media (max-width: 680px) { .traces { grid-template-columns: 1fr; } }
+    .trace-label {
+      font-size: 0.75rem; font-weight: 700; letter-spacing: .04em;
+      text-transform: uppercase; margin-bottom: 6px;
+    }
+    .trace-label.bad-label { color: var(--warn); }
+    .trace-label.good-label { color: var(--accent2); }
+
+    /* ── Figures ── */
+    .fig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin: 1.5rem 0; }
+    @media (max-width: 680px) { .fig-grid { grid-template-columns: 1fr; } }
+    .fig-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+    }
+    .fig-card img { width: 100%; display: block; }
+    .fig-card .fig-caption {
+      padding: 8px 12px; font-size: 0.78rem; color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Results table ── */
+    .results-table { width: 100%; border-collapse: collapse; margin: 1.2rem 0; }
+    .results-table th {
+      background: var(--surface); color: var(--text);
+      font-size: 0.8rem; font-weight: 700; padding: 9px 14px;
+      text-align: left; border-bottom: 2px solid var(--border);
+    }
+    .results-table td {
+      padding: 9px 14px; font-size: 0.85rem; color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .results-table tr.best td { color: var(--text); background: rgba(52,201,138,.06); }
+    .results-table tr.best td:first-child { border-left: 3px solid var(--accent2); }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 0.75rem; font-weight: 700;
+    }
+    .badge.green { background: rgba(52,201,138,.15); color: var(--accent2); }
+    .badge.red   { background: rgba(232,92,92,.15);  color: var(--warn); }
+    .badge.blue  { background: rgba(91,141,238,.15); color: var(--accent); }
+
+    /* ── Timeline ── */
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before {
+      content: ''; position: absolute; left: 6px; top: 6px; bottom: 6px;
+      width: 2px; background: var(--border);
+    }
+    .tl-item { position: relative; margin-bottom: 2rem; }
+    .tl-item::before {
+      content: ''; position: absolute; left: -1.65rem; top: 5px;
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--accent); border: 2px solid var(--bg);
+    }
+    .tl-item.warn::before { background: var(--warn); }
+    .tl-item.ok::before   { background: var(--accent2); }
+    .tl-title { font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .tl-sub   { font-size: 0.85rem; color: var(--muted); }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center; padding: 2.5rem 1rem;
+      font-size: 0.82rem; color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav>
+  <span class="logo">RLM × Slumbot</span>
+  <a href="#demo">Demo</a>
+  <a href="#results">Results</a>
+  <a href="#story">Story</a>
+  <a href="#slumbot">Slumbot</a>
+  <span class="spacer"></span>
+  <a class="btn" href="https://colab.research.google.com/github/aryanarora236/STAT-4830-RL-project/blob/main/notebooks/final_demo.ipynb"
+     target="_blank">▶ Run in Colab</a>
+</nav>
+
+<!-- ── Hero ── -->
+<div class="hero">
+  <div class="container">
+    <div class="tag">STAT 4830 · Final Project</div>
+    <h1>Recursive Language Models<br>for Poker Decision-Making</h1>
+    <p>
+      A 1.5B LLM trained to play No-Limit Hold'em by writing Python code
+      that parses hand histories, computes opponent stats, and decides an
+      action — then tested live against Slumbot, a near-Nash equilibrium bot.
+    </p>
+    <div class="hero-btns">
+      <a class="primary"
+         href="https://colab.research.google.com/github/aryanarora236/STAT-4830-RL-project/blob/main/notebooks/final_demo.ipynb"
+         target="_blank">
+        ▶&nbsp; Open Demo Notebook
+      </a>
+      <a class="secondary" href="https://github.com/aryanarora236/STAT-4830-RL-project" target="_blank">
+        ⌥&nbsp; GitHub Repo
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ── Key numbers ── -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="val">8%</div>
+      <div class="label">Zero-shot Qwen-7B baseline</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">25%</div>
+      <div class="label">After behavior cloning</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">42.3%</div>
+      <div class="label">Peak RL EMA (iter 105)</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">33.3%</div>
+      <div class="label">Shaped reward held-out acc</div>
+    </div>
+    <div class="stat-card">
+      <div class="val warn">0%</div>
+      <div class="label">Real code used (unshaped RL)</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">95%</div>
+      <div class="label">Real code used (shaped reward)</div>
+    </div>
+  </div>
+
+  <!-- ── How it works ── -->
+  <section>
+    <h2><span class="num">01</span> How It Works</h2>
+    <p>
+      Instead of stuffing 4,300-character poker contexts into the attention
+      window, the model <strong>writes Python code</strong> that parses the
+      history and computes the answer. The sandboxed REPL executes it and
+      returns the action.
+    </p>
+    <div class="pipeline">
+      <div class="pipe-box">
+        <div class="title">Poker Task</div>
+        <div class="sub">context + question</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box highlight">
+        <div class="title">LLM Agent</div>
+        <div class="sub">Qwen2.5-Coder-1.5B + LoRA</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">
+        <div class="title">Python REPL</div>
+        <div class="sub">sandboxed execution</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box highlight">
+        <div class="title">Action</div>
+        <div class="sub">fold / call / raise / check</div>
+      </div>
+    </div>
+    <p>
+      Training proceeds in two stages: <strong>Behavior Cloning</strong> on
+      500 heuristic expert trajectories teaches the retrieve→compute→decide
+      pattern; <strong>REINFORCE</strong> then optimizes it against the
+      type-match reward.
+    </p>
+  </section>
+
+  <!-- ── Live Demo Traces ── -->
+  <section id="demo">
+    <h2><span class="num">02</span> Demo Traces</h2>
+    <p>
+      These are verbatim outputs from the model. The left trace shows the
+      reward-hacking bypass the unshaped policy learned. The right trace
+      shows the full retrieve→compute→decide reasoning after reward shaping.
+    </p>
+
+    <div class="traces">
+      <!-- BAD trace -->
+      <div>
+        <div class="trace-label bad-label">✗ Reward Hack — Unshaped RL</div>
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span>Exp B · iteration 40</span>
+            <span class="filename">rollout.py</span>
+          </div>
+          <pre><span class="cm"># Model output — no code block, just text:</span>
+fold
+
+<span class="cm"># Sandbox fallback wraps it as:</span>
+<span class="fn">print</span>(<span class="st">"fold"</span>)
+
+<span class="cm"># Sandbox output:</span>
+fold
+
+<span class="cm"># Diagnostics:</span>
+real_code       = <span class="bad">False</span>
+wrapped_action  = <span class="bad">True</span>
+exec_ok         = <span class="bad">False</span>
+reward          = <span class="bad">0.0</span>  <span class="cm"># guessed wrong</span></pre>
+        </div>
+      </div>
+
+      <!-- GOOD trace -->
+      <div>
+        <div class="trace-label good-label">✓ Genuine REPL Reasoning — Shaped Reward</div>
+        <div class="code-wrap">
+          <div class="code-header">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span>Shaped v1 · iteration 5</span>
+            <span class="filename">rollout.py</span>
+          </div>
+          <pre><span class="cm"># Step 1 — retrieve opponent stats</span>
+vpip, pfr, agg = <span class="fn">parse_stats</span>(CONTEXT, <span class="st">'UTG'</span>)
+<span class="cm"># UTG: VPIP 47%, PFR 20%, Agg 2.8</span>
+
+<span class="cm"># Step 2 — compute pot odds</span>
+pot_odds = <span class="nu">6</span> / (<span class="nu">18</span> + <span class="nu">6</span>)  <span class="cm"># 0.25</span>
+
+<span class="cm"># Step 3 — decide</span>
+<span class="kw">if</span> agg > <span class="nu">2.0</span> <span class="kw">and</span> pot_odds < <span class="nu">0.35</span>:
+    <span class="fn">print</span>(<span class="st">"call $6"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="st">"fold"</span>)
+
+<span class="cm"># Diagnostics:</span>
+real_code  = <span class="ok">True</span>
+exec_ok    = <span class="ok">True</span>
+reward     = <span class="ok">1.0</span>  <span class="cm"># type match: call == call</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <p style="margin-top:1rem">
+      The shaped reward adds +0.3 for extractable Python, +0.2 for parsed
+      opponent stats, and −0.2 for the fallback bypass. Real code use jumps
+      from &lt;10% to <strong>95%</strong> within 5 iterations.
+    </p>
+  </section>
+
+  <!-- ── Training Story ── -->
+  <section id="story">
+    <h2><span class="num">03</span> Training Story</h2>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-title">Smoke test + BC baseline (3–10 iters)</div>
+        <div class="tl-sub">Pipeline verified. BC initialization reaches 25% rollout accuracy with genuine retrieve→compute→decide code on every rollout.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-title">Long RL run — 120 iterations</div>
+        <div class="tl-sub">EMA accuracy climbs 25% → 42.3% at iter 105. Single batches hit 75%. Then post-peak drift begins.</div>
+      </div>
+      <div class="tl-item warn">
+        <div class="tl-title">Reward hacking discovered</div>
+        <div class="tl-sub">real_code counter reveals the policy emits bare text 3.7/4 rollouts per batch. The type-match reward fires ~25% on random guesses — cheaper than writing real code.</div>
+      </div>
+      <div class="tl-item ok">
+        <div class="tl-title">Shaped reward fix — 20 iterations</div>
+        <div class="tl-sub">Explicit +0.3 REPL bonus and −0.2 fallback penalty. Real code: 0% → 95% in 5 iterations. Held-out accuracy: 20% → 33.3% (+13.3 pp).</div>
+      </div>
+    </div>
+
+    <div class="fig-grid">
+      <div class="fig-card">
+        <img src="results/poker_rl_long_simple_120iters_20260420/training_curves.png"
+             alt="120-iteration training curves" />
+        <div class="fig-caption">EMA accuracy over 120 RL iterations — peak 42.3% at iter 105, then reward-hacking drift.</div>
+      </div>
+      <div class="fig-card">
+        <img src="results/analysis_all_experiments_20260423/heldout_eval_accuracy_over_time.png"
+             alt="Held-out evaluation accuracy" />
+        <div class="fig-caption">Held-out eval accuracy per checkpoint. Shaped reward consistently reaches 33.3% vs 20–25% unshaped.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Results ── -->
+  <section id="results">
+    <h2><span class="num">04</span> Results</h2>
+    <p>All agents evaluated on the same fixed held-out task set (seed 20260422).</p>
+
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>Agent</th>
+          <th>Held-out Accuracy</th>
+          <th>Avg Reward</th>
+          <th>Code Used</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Zero-shot Qwen-7B</td>
+          <td>8.0%</td>
+          <td>0.092</td>
+          <td><span class="badge red">Rarely</span></td>
+        </tr>
+        <tr>
+          <td>Exp B unshaped RL</td>
+          <td>20.0%</td>
+          <td>0.200</td>
+          <td><span class="badge red">&lt;10%</span></td>
+        </tr>
+        <tr>
+          <td>Exp A (iter 35)</td>
+          <td>25.0%</td>
+          <td>0.285</td>
+          <td><span class="badge red">&lt;10%</span></td>
+        </tr>
+        <tr class="best">
+          <td><strong>Shaped reward (iter 5/10)</strong></td>
+          <td><strong>33.3%</strong></td>
+          <td><strong>0.333</strong></td>
+          <td><span class="badge green">95%</span></td>
+        </tr>
+        <tr>
+          <td>Heuristic (ceiling)</td>
+          <td>100.0%</td>
+          <td>1.000</td>
+          <td><span class="badge blue">100%</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="fig-card" style="max-width:560px; margin: 1rem auto;">
+      <img src="results/analysis_all_experiments_20260423/best_heldout_comparison.png"
+           alt="Best held-out comparison" />
+      <div class="fig-caption">Best held-out accuracy and reward by experiment variant.</div>
+    </div>
+  </section>
+
+  <!-- ── Slumbot ── -->
+  <section id="slumbot">
+    <h2><span class="num">05</span> Slumbot Integration</h2>
+    <p>
+      <a href="https://slumbot.com" target="_blank" style="color:var(--accent)">Slumbot</a>
+      is a heads-up NLHE bot trained via counterfactual regret minimization
+      that reached #1 on the public leaderboard at the 2018 ACPC.
+      Its public REST API lets us play real hands programmatically.
+    </p>
+    <p>
+      Each Slumbot decision triggers the full RLM pipeline: we build a
+      <code>CONTEXT</code> string from the Slumbot JSON state, pass it to
+      the RLM, run the emitted code in the sandbox, and convert the output
+      to Slumbot's API format (<code>f</code> / <code>c</code> / <code>r$X</code>).
+    </p>
+    <div class="code-wrap" style="max-width:560px; margin: 1rem 0;">
+      <div class="code-header">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span>RLM → Slumbot bridge</span>
+      </div>
+      <pre>Slumbot JSON state
+    ↓  build_context()
+CONTEXT string  (same format as training)
+    ↓  RLM.run_episode()
+Python code  →  sandboxed REPL
+    ↓  parse_action()
+<span class="st">"call $200"</span>
+    ↓  convert_to_api()
+<span class="st">"c"</span>  →  POST /act</pre>
+    </div>
+    <p>
+      The model was trained on 6-max at $1/$2 blinds; Slumbot is heads-up
+      at $50/$100 — a significant distribution shift. This section is a
+      <em>system integration demonstration</em>, not a performance claim.
+    </p>
+    <p>
+      Run the live Slumbot demo yourself in the Colab notebook (Section 8),
+      adding <code>SLUMBOT_USER</code> and <code>SLUMBOT_PASS</code>
+      credentials via Colab Secrets.
+    </p>
+  </section>
+
+  <!-- ── CTA ── -->
+  <section style="border-bottom:none; text-align:center; padding: 2.5rem 0 1rem;">
+    <h2 style="justify-content:center">Try It Yourself</h2>
+    <p>The full demo — live model inference, training curves, Slumbot play — runs in ~10 minutes on a free Colab T4 GPU.</p>
+    <div class="hero-btns" style="margin-top:1.2rem">
+      <a class="primary"
+         href="https://colab.research.google.com/github/aryanarora236/STAT-4830-RL-project/blob/main/notebooks/final_demo.ipynb"
+         target="_blank">▶&nbsp; Open in Colab</a>
+      <a class="secondary" href="https://github.com/aryanarora236/STAT-4830-RL-project" target="_blank">⌥&nbsp; View on GitHub</a>
+    </div>
+  </section>
+
+</div><!-- /container -->
+
+<footer>
+  <p>
+    STAT 4830 Final Project · Aryan Arora, Aarav Mulinti, Aadithya Srinivasan, Aryan Jeena ·
+    University of Pennsylvania · 2026
+  </p>
+  <p style="margin-top:6px">
+    <a href="https://github.com/aryanarora236/STAT-4830-RL-project">GitHub</a> ·
+    <a href="https://colab.research.google.com/github/aryanarora236/STAT-4830-RL-project/blob/main/notebooks/final_demo.ipynb">Colab Demo</a>
+  </p>
+</footer>
+
+</body>
+</html>
