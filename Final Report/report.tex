@@ -502,8 +502,18 @@ The $-73$~bb/100 figure is expected: Slumbot plays near-GTO and a
 flat heuristic is far from optimal.
 This result establishes a lower bound that a properly trained RL agent
 should comfortably exceed.
-Plots of the cumulative P/L, EMA, and outcome distribution are
-saved in \texttt{docs/results/slumbot\_session\_20260513/}.
+\Cref{fig:slumbot} shows the full cumulative P/L and per-hand breakdown.
+
+\begin{figure}[h]
+  \caption{Heuristic agent vs.\ Slumbot — 50 hands.
+           Top-left: cumulative P/L (bb).
+           Top-right: per-hand result coloured by outcome.
+           Bottom-left: EMA-smoothed bb/hand ($\alpha{=}0.15$).
+           Bottom-right: outcome distribution.}
+  \label{fig:slumbot}
+  \vskip 0.05in
+  \centerline{\includegraphics[width=\columnwidth]{../docs/results/slumbot_session_20260513/slumbot_performance.png}}
+\end{figure}
 
 \textbf{Parallel development.}
 Slumbot was developed concurrently with the RLM component.
