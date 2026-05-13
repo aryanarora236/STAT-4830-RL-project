@@ -178,29 +178,31 @@ The primary reward is action-type match: $r{=}1$ if
 $\mathrm{type}(\hat{a}) = \mathrm{type}(a^*)$, else $r{=}0$.
 
 \begin{figure}[t]
-\centering\small
-\setlength{\fboxsep}{5pt}
-\fbox{\begin{minipage}{0.90\columnwidth}
-\centering
-\textbf{Poker Task} $(C,\,q)$\\[4pt]
-$\downarrow$\\[3pt]
-\fbox{\begin{minipage}{0.82\columnwidth}\centering\vspace{2pt}
-  LLM (Qwen2.5-Coder-1.5B + LoRA)\\
-  \emph{generates Python code}
-  \vspace{2pt}
-\end{minipage}}\\[4pt]
-$\downarrow$ code string\\[3pt]
-\fbox{\begin{minipage}{0.82\columnwidth}\centering\vspace{2pt}
-  Sandboxed Python REPL\\
-  \texttt{exec(code, \{CONTEXT: ...\})}
-  \vspace{2pt}
-\end{minipage}}\\[4pt]
-$\downarrow$ last printed line\\[3pt]
-\textbf{Action} $\hat{a}$
-\end{minipage}}
-\caption{RLM pipeline. The long context lives in a Python environment.
-  The model emits code; the sandbox executes it and returns the action.}
-\label{fig:arch}
+  \vskip 0.1in
+  \centering\small
+  \setlength{\fboxsep}{5pt}
+  \fbox{\begin{minipage}{0.90\columnwidth}
+    \centering
+    \textbf{Poker Task} $(C,\,q)$\\[4pt]
+    $\downarrow$\\[3pt]
+    \fbox{\begin{minipage}{0.82\columnwidth}\centering\vspace{2pt}
+      LLM (Qwen2.5-Coder-1.5B + LoRA)\\
+      \emph{generates Python code}
+      \vspace{2pt}
+    \end{minipage}}\\[4pt]
+    $\downarrow$ code string\\[3pt]
+    \fbox{\begin{minipage}{0.82\columnwidth}\centering\vspace{2pt}
+      Sandboxed Python REPL\\
+      \texttt{exec(code, \{CONTEXT: ...\})}
+      \vspace{2pt}
+    \end{minipage}}\\[4pt]
+    $\downarrow$ last printed line\\[3pt]
+    \textbf{Action} $\hat{a}$
+  \end{minipage}}
+  \caption{RLM pipeline. The long context lives in a Python environment.
+    The model emits code; the sandbox executes it and returns the action.}
+  \label{fig:arch}
+  \vskip -0.1in
 \end{figure}
 
 \subsection{Poker Environment}
@@ -323,15 +325,14 @@ With the stabilized advantage estimator the main run continued for
 
 \begin{figure}[t]
   \vskip 0.1in
-  \begin{center}
-    \centerline{\includegraphics[width=\columnwidth]{training_curves.png}}
-    \caption{120-iteration REINFORCE run.  EMA accuracy ($\gamma{=}0.9$)
-      peaks at 42.3\% (iter~105) then drifts as reward hacking
-      dominates.  Single-batch spikes to 75\% mark episodes where
-      the model uses the REPL correctly.}
-    \label{fig:longrun}
-  \end{center}
-  \vskip -0.15in
+  \centering
+  \includegraphics[width=\columnwidth]{training_curves.png}
+  \caption{120-iteration REINFORCE run. EMA accuracy ($\gamma{=}0.9$)
+    peaks at 42.3\% (iter~105) then drifts as reward hacking
+    dominates. Single-batch spikes to 75\% mark episodes where
+    the model uses the REPL correctly.}
+  \label{fig:longrun}
+  \vskip -0.1in
 \end{figure}
 
 \subsection{Stage 3 — Reward Hacking Diagnosis}
@@ -492,15 +493,17 @@ This result establishes a lower bound that a properly trained RL agent
 should comfortably exceed.
 \Cref{fig:slumbot} shows the full cumulative P/L and per-hand breakdown.
 
-\begin{figure}[h]
+\begin{figure}[t]
+  \vskip 0.1in
+  \centering
+  \includegraphics[width=\columnwidth]{slumbot_performance.png}
   \caption{Heuristic agent vs.\ Slumbot — 50 hands.
            Top-left: cumulative P/L (bb).
            Top-right: per-hand result coloured by outcome.
            Bottom-left: EMA-smoothed bb/hand ($\alpha{=}0.15$).
            Bottom-right: outcome distribution.}
   \label{fig:slumbot}
-  \vskip 0.05in
-  \centerline{\includegraphics[width=\columnwidth]{slumbot_performance.png}}
+  \vskip -0.1in
 \end{figure}
 
 \textbf{Parallel development.}
@@ -539,14 +542,13 @@ task set (seed 20260422, 15–25 episodes per agent).
 
 \begin{figure}[t]
   \vskip 0.1in
-  \begin{center}
-    \centerline{\includegraphics[width=\columnwidth]{best_heldout_comparison.png}}
-    \caption{Best held-out accuracy and reward by experiment.
-      The shaped-reward run achieves the highest accuracy of any RL
-      variant, with code usage at 95\% vs.\ $<$10\% for unshaped runs.}
-    \label{fig:comparison}
-  \end{center}
-  \vskip -0.15in
+  \centering
+  \includegraphics[width=\columnwidth]{best_heldout_comparison.png}
+  \caption{Best held-out accuracy and reward by experiment.
+    The shaped-reward run achieves the highest accuracy of any RL
+    variant, with code usage at 95\% vs.\ $<$10\% for unshaped runs.}
+  \label{fig:comparison}
+  \vskip -0.1in
 \end{figure}
 
 % ── 8. Discussion ───────────────────────────────────────────────────────────────
