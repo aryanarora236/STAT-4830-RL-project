@@ -449,14 +449,21 @@ board, pot, betting history), pass it to the RLM, execute the emitted
 code in the sandbox, and convert the last printed action to Slumbot's
 API format (\texttt{f}/\texttt{c}/\texttt{r\$X}).
 
+\textbf{Range as a second component.}
+The Slumbot bridge is built in parallel with a sister project called
+Range, which provides the Slumbot client, wire-protocol parsing, and
+leaderboard validation.  A Q-learning agent in Range currently ranks
+\#3 worldwide on Slumbot's public leaderboard at +96.34~BB/100 over
+5,000+ hands.  This establishes that Slumbot is a meaningful external
+benchmark and that the integration is not just a toy API adapter.
+
 \textbf{Distribution shift.}
 The RLM was trained on 6-max at \$1/\$2 blinds; Slumbot is heads-up
 at \$50/\$100 with 200bb stacks.
 We treat this as a \emph{system demonstration} rather than a
 performance claim: the point is that the RLM pattern plugs cleanly
 into a real poker-server protocol.
-The Range sister project's Q-learning agent sits at +96.34~BB/100 on
-Slumbot's leaderboard (\#3 worldwide), confirming Slumbot is a
+The Range sister project's leaderboard result confirms Slumbot is a
 non-trivial opponent.
 
 \textbf{Recorded session (strength-based heuristic, 50 hands).}
