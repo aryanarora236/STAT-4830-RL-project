@@ -32,7 +32,7 @@ CKPT_CANDIDATES = [
     "docs/results/poker_rl_expA_partial_20260422/poker_rl_expA_evalselect_20260421_long/best_by_eval",
     "docs/results/poker_rl_expB_mixed20_20260422/poker_rl_expB_mixed20_20260422/best_by_eval",
 ]
-RESULTS_DIR = Path("docs/results/slumbot_rl_session_20260513")
+RESULTS_DIR_DEFAULT = Path("docs/results/slumbot_rl_session_20260513")
 
 # ── Slumbot state walker ───────────────────────────────────────────────────────
 def _compute_state(action_str, client_pos):
@@ -254,13 +254,21 @@ def main():
     parser.add_argument("--user",     required=True)
     parser.add_argument("--password", required=True)
     parser.add_argument("--hands",    type=int, default=10)
+    parser.add_argument("--ckpt",     default=None, help="Override LoRA checkpoint path")
+    parser.add_argument("--out-dir",  default=None, help="Override results output dir")
     args = parser.parse_args()
+
+    global RESULTS_DIR
+    RESULTS_DIR = Path(args.out_dir) if args.out_dir else RESULTS_DIR_DEFAULT
 
     # ── Load model ─────────────────────────────────────────────────────────────
     ckpt = None
-    for c in CKPT_CANDIDATES:
-        if os.path.isdir(c):
-            ckpt = c; break
+    if args.ckpt and os.path.isdir(args.ckpt):
+        ckpt = args.ckpt
+    else:
+        for c in CKPT_CANDIDATES:
+            if os.path.isdir(c):
+                ckpt = c; break
     if not ckpt:
         print("No checkpoint found. Tried:", CKPT_CANDIDATES); return
 
